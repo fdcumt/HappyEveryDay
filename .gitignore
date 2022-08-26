@@ -1,0 +1,10 @@
+Intermediate/
+
+#忽略名字为Intermediate的所有文件夹及其子目录内所有内容
+Intermediate/
+
+#忽略名字为Binaries的所有文件夹及其子目录内所有内容
+Binaries/
+
+
+*.sln
