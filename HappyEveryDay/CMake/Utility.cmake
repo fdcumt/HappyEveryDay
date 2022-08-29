@@ -67,7 +67,7 @@ function(GenVSFolder ExeOrExeName LibOrExeAbsDir bLib)
 
 	list(LENGTH LibOrExeUpLevelRelativeDirList Len)
 	if(${Len} EQUAL 0)
-		message("GenVSFolder ExeOrExeName:${ExeOrExeName} Len 0")
+		#message("GenVSFolder ExeOrExeName:${ExeOrExeName} Len 0")
 		if(${bLib})
 			set_property(TARGET "${ExeOrExeName}" PROPERTY FOLDER "Libs")
 		else()
