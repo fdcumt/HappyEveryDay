@@ -15,7 +15,8 @@ set(SlnName "HappyEveryDay")
 INCLUDE("${CMAKE_BINARY_DIR}/AutoGenHeader.cmake")  
 INCLUDE("${CMAKE_SOURCE_DIR}/../CMake/Utility.cmake")  
 
-set(SlnDir "${CMAKE_SOURCE_DIR}/..")
+#和Generator.bat同级目录
+set(RootDir "${CMAKE_SOURCE_DIR}/..")
 set(SlnAutoGenLibsDir "${CMAKE_BINARY_DIR}/Libs")
 
 

@@ -5,7 +5,7 @@
 
 
 #设置项目名称
-set (ExeName "ExeSample")
+set (ExeName "SoftwareRasterizer")
 
 #静态连接库, 连接器->输入->附加依赖项
 set(LibItems 
