@@ -129,8 +129,9 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 	#message("Succeed Generate lib:${LibName}")
 endfunction(GenLib)
 
-#生成exe项目
-function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir)
+
+#生成Application项目
+function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication)
 	#message("Begin Generate EXE:${ExeName}")
 	GenIncludeABSDir(IncludeAbsDirs "${IncludeDirs}" "${CurDir}")
 	GetAbslutePaths(LibAbsDirs "${LibDirs}" "${CurDir}")
@@ -158,11 +159,34 @@ function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir)
 
 	#Properties->General->Output Directory
 	set_target_properties("${ExeName}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OutputAbsDir}")
-
-
+	
+	if(bApplication)
+		#message("GenExecutable EXE:${ExeName} use /SUBSYSTEM:WINDOWS")
+		#ref:https://developercommunity.visualstudio.com/t/cmake-set-subsystem-to-console/46678
+		#set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+		#set_target_properties("${ExeName}" PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
+		#set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+		#set_target_properties("${ExeName}" PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "_CONSOLE")
+		#注意Release和Debug都要设置
+		set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+		set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
+		set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+	endif()
 
 	#message("Succeed Generate EXE:${ExeName}")
+endfunction(GenExecutable)
+
+#生成exe项目
+function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir)
+	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" false)
 endfunction(GenEXE)
+
+
+#生成Application项目
+function(GenApplication ExeName CurDir IncludeDirs LibDirs OutputDir)
+	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" true)
+endfunction(GenApplication)
+
 
 #function(AddSlnSubDir CurDir)
 #	#遍历sln文件夹,获取文件夹下所有含有CMakeLists.txt的项目
@@ -175,6 +199,7 @@ endfunction(GenEXE)
 #		endif()
 #	endforeach()
 #endfunction(AddSlnSubDir)
+
 
 function(AddSlnSubDir CurDir)
 	#遍历sln文件夹,获取文件夹下所有含有CMakeLists.txt的项目
