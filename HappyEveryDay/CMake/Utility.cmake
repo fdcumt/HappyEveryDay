@@ -56,9 +56,34 @@ function(GenIncludeABSDir IncludeAbsDirs IncludeDirs CurDir)
 	#message("IncludeAbsDirs:${IncludeAbsDirsTemp}")
 endfunction(GenIncludeABSDir)
 
+function(GenVSFolder ExeOrExeName LibOrExeAbsDir bLib)
+    #找到上一层目录的绝对路径
+	get_filename_component(LibOrExeUpLevelAbsDir "${LibOrExeAbsDir}/.." ABSOLUTE)
+	#message("GenVSFolder LibOrExeUpLevelDir:${LibOrExeUpLevelDir} LibOrExeAbsDir:${LibOrExeAbsDir}")
+	#获取相对于source的目录
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" LibOrExeUpLevelRelativeDir "${LibOrExeUpLevelAbsDir}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" LibOrExeUpLevelRelativeDir "${LibOrExeUpLevelRelativeDir}")
+    string(REPLACE "/" ";" LibOrExeUpLevelRelativeDirList "${LibOrExeUpLevelRelativeDir}")
+
+	list(LENGTH LibOrExeUpLevelRelativeDirList Len)
+	if(${Len} EQUAL 0)
+		message("GenVSFolder ExeOrExeName:${ExeOrExeName} Len 0")
+		if(${bLib})
+			set_property(TARGET "${ExeOrExeName}" PROPERTY FOLDER "Libs")
+		else()
+			set_property(TARGET "${ExeOrExeName}" PROPERTY FOLDER "Executables")
+		endif()
+	else()
+		#foreach(LibOrExeUpLevelRelativeDirItemName IN LISTS LibOrExeUpLevelRelativeDirList)
+			#message("GenVSFolder LibOrExeUpLevelRelativeDirItemName:${LibOrExeUpLevelRelativeDirItemName}")
+		#endforeach(LibOrExeUpLevelRelativeDirItemName)
+		set_property(TARGET "${ExeOrExeName}" PROPERTY FOLDER "${LibOrExeUpLevelRelativeDir}")
+	endif()
+endfunction(GenVSFolder)
+
 #生成lib库
 function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
-	#message("Begin Generate lib:${LibName}")
+	#message("Begin Generate lib:${LibName} CurDir:${CurDir}")
 	GenIncludeABSDir(IncludeAbsDirs "${IncludeDirs}" "${CurDir}" )
 	GetAbslutePaths(LibAbsDirs "${LibDirs}" "${CurDir}")
 	GetAbslutePaths(OutputAbsDir "${OutputDir}" "${CurDir}")
@@ -98,8 +123,9 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 	target_link_directories("${LibName}" PUBLIC "${LibAbsDirs}")
 	
 	# Creates a folder "libraries" and adds target this project under it
-	set_property(TARGET "${LibName}" PROPERTY FOLDER "Libraries")
-	
+	#set_property(TARGET "${LibName}" PROPERTY FOLDER "Libraries")
+	GenVSFolder("${LibName}" "${CurDir}" true)
+
 	#message("Succeed Generate lib:${LibName}")
 endfunction(GenLib)
 
@@ -127,10 +153,13 @@ function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir)
 	target_link_directories("${ExeName}" PUBLIC "${LibAbsDirs}")
 	
 	#Creates a folder "libraries" and adds target project (math.vcproj) under it
-	set_property(TARGET "${ExeName}" PROPERTY FOLDER "Executables")
+	#set_property(TARGET "${ExeName}" PROPERTY FOLDER "Executables")
+	GenVSFolder("${ExeName}" "${CurDir}" false)
 
 	#Properties->General->Output Directory
 	set_target_properties("${ExeName}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OutputAbsDir}")
+
+
 
 	#message("Succeed Generate EXE:${ExeName}")
 endfunction(GenEXE)

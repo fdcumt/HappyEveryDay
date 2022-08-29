@@ -61,6 +61,11 @@ if exist %CMakeBuildFullPath% (
 	)
 ) 
 
+::存在sln快捷方式就删除
+if exist %CurDir%*.sln (
+    del %CurDir%*.sln
+) 
+
 ::创建Build目录
 md %CMakeBuildFullPath%
 
