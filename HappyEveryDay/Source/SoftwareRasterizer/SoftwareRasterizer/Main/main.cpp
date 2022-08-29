@@ -5,149 +5,81 @@
 #include "Templates/UtilityTemplate.h"
 #include "Delegates/Delegate.h"
 
-// HelloWindowsDesktop.cpp
-// compile with: /D_UNICODE /DUNICODE /DWIN32 /D_WINDOWS /c
+#include <iostream>
+#include <Windows.h>
+using namespace std;
 
-#include <windows.h>
-#include <stdlib.h>
-#include <string.h>
-#include <tchar.h>
 
-// Global variables
-
-// The main window class name.
-static TCHAR szWindowClass[] = _T("DesktopApp");
-
-// The string that appears in the application's title bar.
-static TCHAR szTitle[] = _T("Windows Desktop Guided Tour Application");
-
-// Stored instance handle for use in Win32 API calls such as FindResource
-HINSTANCE hInst;
-
-// Forward declarations of functions included in this code module:
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-
-int WINAPI WinMain(
-	_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPSTR     lpCmdLine,
-	_In_ int       nCmdShow
-)
+LRESULT CALLBACK __WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 {
-	WNDCLASSEX wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInstance;
-	wcex.hIcon = LoadIcon(wcex.hInstance, IDI_APPLICATION);
-	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = NULL;
-	wcex.lpszClassName = szWindowClass;
-	wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
-
-	if (!RegisterClassEx(&wcex))
-	{
-		MessageBox(NULL,
-			_T("Call to RegisterClassEx failed!"),
-			_T("Windows Desktop Guided Tour"),
-			NULL);
-
-		return 1;
-	}
-
-	// Store instance handle in our global variable
-	hInst = hInstance;
-
-	// The parameters to CreateWindowEx explained:
-	// WS_EX_OVERLAPPEDWINDOW : An optional extended window style.
-	// szWindowClass: the name of the application
-	// szTitle: the text that appears in the title bar
-	// WS_OVERLAPPEDWINDOW: the type of window to create
-	// CW_USEDEFAULT, CW_USEDEFAULT: initial position (x, y)
-	// 500, 100: initial size (width, length)
-	// NULL: the parent of this window
-	// NULL: this application does not have a menu bar
-	// hInstance: the first parameter from WinMain
-	// NULL: not used in this application
-	HWND hWnd = CreateWindowEx(
-		WS_EX_OVERLAPPEDWINDOW,
-		szWindowClass,
-		szTitle,
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT,
-		500, 100,
-		NULL,
-		NULL,
-		hInstance,
-		NULL
-	);
-
-	if (!hWnd)
-	{
-		MessageBox(NULL,
-			_T("Call to CreateWindow failed!"),
-			_T("Windows Desktop Guided Tour"),
-			NULL);
-
-		return 1;
-	}
-
-	// The parameters to ShowWindow explained:
-	// hWnd: the value returned from CreateWindow
-	// nCmdShow: the fourth parameter from WinMain
-	ShowWindow(hWnd,
-		nCmdShow);
-	UpdateWindow(hWnd);
-
-	// Main message loop:
-	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-
-	return (int)msg.wParam;
-}
-
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE:  Processes messages for the main window.
-//
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT ps;
-	HDC hdc;
-	TCHAR greeting[] = _T("Hello, Windows desktop!");
-
-	switch (message)
-	{
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-
-		// Here your application is laid out.
-		// For this introduction, we just print out "Hello, Windows desktop!"
-		// in the top left corner.
-		TextOut(hdc,
-			5, 5,
-			greeting, _tcslen(greeting));
-		// End application-specific layout section.
-
-		EndPaint(hWnd, &ps);
-		break;
-	case WM_DESTROY:
-		PostQuitMessage(0);
+	switch (msg) {
+	case WM_CLOSE:
+		MessageBox(NULL, "WM_CLOSE", "", NULL);
 		break;
 	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
 		break;
 	}
 
+	return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+int main()
+{
+	// 窗口属性初始化
+	HINSTANCE hIns = GetModuleHandle(0);
+	WNDCLASSEX wc;
+	wc.cbSize = sizeof(wc);								// 定义结构大小
+	wc.style = CS_HREDRAW | CS_VREDRAW;					// 如果改变了客户区域的宽度或高度，则重新绘制整个窗口 
+	wc.cbClsExtra = 0;									// 窗口结构的附加字节数
+	wc.cbWndExtra = 0;									// 窗口实例的附加字节数
+	wc.hInstance = hIns;								// 本模块的实例句柄
+	wc.hIcon = NULL;									// 图标的句柄
+	wc.hIconSm = NULL;									// 和窗口类关联的小图标的句柄
+	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;			// 背景画刷的句柄
+	wc.hCursor = NULL;									// 光标的句柄
+	wc.lpfnWndProc = __WndProc;							// 窗口处理函数的指针
+	wc.lpszMenuName = NULL;								// 指向菜单的指针
+	wc.lpszClassName = "LYSM_class";					// 指向类名称的指针
+
+	// 为窗口注册一个窗口类
+	if (!RegisterClassEx(&wc)) {
+		cout << "RegisterClassEx error : " << GetLastError() << endl;
+	}
+
+	// 创建窗口
+	HWND hWnd = CreateWindowEx(
+		WS_EX_TOPMOST,				// 窗口扩展样式：顶级窗口
+		"LYSM_class",				// 窗口类名
+		"LYSM_title",				// 窗口标题
+		WS_OVERLAPPEDWINDOW,		// 窗口样式：重叠窗口
+		0,							// 窗口初始x坐标
+		0,							// 窗口初始y坐标
+		800,						// 窗口宽度
+		600,						// 窗口高度
+		0,							// 父窗口句柄
+		0,							// 菜单句柄 
+		hIns,						// 与窗口关联的模块实例的句柄
+		0							// 用来传递给窗口WM_CREATE消息
+	);
+	if (hWnd == 0) {
+		cout << "CreateWindowEx error : " << GetLastError() << endl;
+	}
+	UpdateWindow(hWnd);
+	ShowWindow(hWnd, SW_SHOW);
+
+	// 消息循环（没有会导致窗口卡死）
+	MSG msg = { 0 };
+	while (msg.message != WM_QUIT) {
+		// 从消息队列中删除一条消息
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+			DispatchMessage(&msg);
+		}
+	}
+
+
+	cout << "finished." << endl;
+	getchar();
+
+	getchar();
 	return 0;
 }

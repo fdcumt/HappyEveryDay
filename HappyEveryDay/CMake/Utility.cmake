@@ -160,18 +160,18 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication
 	#Properties->General->Output Directory
 	set_target_properties("${ExeName}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OutputAbsDir}")
 	
-	if(bApplication)
-		#message("GenExecutable EXE:${ExeName} use /SUBSYSTEM:WINDOWS")
-		#ref:https://developercommunity.visualstudio.com/t/cmake-set-subsystem-to-console/46678
-		#set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
-		#set_target_properties("${ExeName}" PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
-		#set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
-		#set_target_properties("${ExeName}" PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "_CONSOLE")
-		#注意Release和Debug都要设置
-		set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-		set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-		set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
-	endif()
+	#if(bApplication)
+	#	#message("GenExecutable EXE:${ExeName} use /SUBSYSTEM:WINDOWS")
+	#	#ref:https://developercommunity.visualstudio.com/t/cmake-set-subsystem-to-console/46678
+	#	#set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+	#	#set_target_properties("${ExeName}" PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
+	#	#set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+	#	#set_target_properties("${ExeName}" PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "_CONSOLE")
+	#	#注意Release和Debug都要设置
+	#	set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+	#	set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
+	#	set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+	#endif()
 
 	#message("Succeed Generate EXE:${ExeName}")
 endfunction(GenExecutable)
