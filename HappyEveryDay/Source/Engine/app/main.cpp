@@ -11,7 +11,7 @@ struct Test_TDelegateHandleBase
 {
 	static void Test()
 	{
-		TDelegateHandleBase<void, int32> DelegateHandle = TDelegateHandleBase<void, int32>::CreateWeakLambda(
+		TDelegateHandleBase<void, int32> DelegateHandle = TDelegateHandleBase<void, int32>::CreateLambda(
 			[](int32 A)
 			{
 				printf("%d", A);

@@ -11,6 +11,8 @@ cmake_minimum_required(VERSION 3.18)
 set(SlnName "HappyEveryDay")
 
 
+MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
+
 #在顶层引入通用函数模块
 INCLUDE("${CMAKE_BINARY_DIR}/AutoGenHeader.cmake")  
 INCLUDE("${CMAKE_SOURCE_DIR}/../CMake/Utility.cmake")  
@@ -26,6 +28,20 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project("${SlnName}")
 	
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+
+set(DefineList)
+
+#添加c++代码中宏定义
+if(PLATFORM_WINDOWS)
+    message("PLATFORM_WINDOWS")
+    list(APPEND DefineList "PLATFORM_WINDOWS")
+elseif(PLATFORM_ANDROID)
+    message("PLATFORM_ANDROID")
+    list(APPEND DefineList "PLATFORM_ANDROID")
+elseif(PLATFORM_IOS)
+    message("PLATFORM_IOS")
+    list(APPEND DefineList "PLATFORM_IOS")
+endif()
 
 AddSlnSubDir("${CMAKE_SOURCE_DIR}")
 

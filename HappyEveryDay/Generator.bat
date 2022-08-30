@@ -76,7 +76,7 @@ set PreAutoGenDoFile=%CurDir%\CMake\PreAutoGenDo.py
 python -B %PreAutoGenDoFile% %SourceFullPath% %AutoGenHeaderPath%
 
 ::调用CMake, 生成sln
-cmake -S %SourceFullPath% -B %CMakeBuildFullPath% -G %VS_Version% -A %VS_Platform%
+cmake -S %SourceFullPath% -B %CMakeBuildFullPath% -G %VS_Version% -A %VS_Platform% -DPLATFORM_WINDOWS=true
 
 if %ERRORLEVEL% NEQ 0 (
 	pause

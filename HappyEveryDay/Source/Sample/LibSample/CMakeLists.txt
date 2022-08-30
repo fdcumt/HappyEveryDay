@@ -7,7 +7,10 @@
 set(LibName "LibSample")
 
 #静态连接库, 连接器->输入->附加依赖项
-set(LibItems "")
+set(LibItems 
+		""
+		"Core"
+	)
 
 
 ################这里面所有路径都要填相对路径, 相对于当前目录所在的路径 begin ##########################
@@ -16,6 +19,7 @@ set(LibItems "")
 #设置Include目录, Properties->C/C++->General->Additional Include Directories
 set(IncludeDirs
 		"."
+		"Core"
 	)
 
 #静态连接库,  连接器->常规->附加库目录

@@ -1,5 +1,4 @@
 
-#根据相对路径获取绝对路径
 function(GetAbslutePaths AbslutePaths RelativePaths BaseDir)
     if(MSVC)
 		set(NewAbslutePaths)
@@ -81,6 +80,18 @@ function(GenVSFolder ExeOrExeName LibOrExeAbsDir bLib)
 	endif()
 endfunction(GenVSFolder)
 
+
+#执行一些公共操作
+function(DoCommonActions ProjectName)
+	#设置通用宏定义
+	foreach(DefineItem IN LISTS DefineList)
+		add_definitions(-D"${DefineItem}")
+		message("Project [${ProjectName}] add define [${DefineItem}]")
+	endforeach()
+
+
+endfunction(DoCommonActions)
+
 #生成lib库
 function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 	#message("Begin Generate lib:${LibName} CurDir:${CurDir}")
@@ -90,6 +101,8 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 
 	#所有文件保存在一个变量中		
 	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc)
+
+	#生成vs中对应的文件夹
 	AddFiltersForVS("${all_files}" "${CurDir}")
 	
 	#********这种方法设置后, Output目录后边不会添加Release/debug***********
@@ -126,6 +139,9 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 	#set_property(TARGET "${LibName}" PROPERTY FOLDER "Libraries")
 	GenVSFolder("${LibName}" "${CurDir}" true)
 
+	#执行一些公共操作
+	DoCommonActions("${LibName}")
+
 	#message("Succeed Generate lib:${LibName}")
 endfunction(GenLib)
 
@@ -139,6 +155,7 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication
 
 	#所有文件保存在一个变量中		
 	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc)
+	file(GLOB_RECURSE cpp_files *.cpp *.c *.cc)
 	AddFiltersForVS("${all_files}" "${CurDir}")
 
 	add_executable("${ExeName}" "${all_files}")
@@ -172,6 +189,9 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication
 	#	set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
 	#	set_target_properties("${ExeName}" PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
 	#endif()
+
+	#执行一些公共操作
+	DoCommonActions("${ExeName}")
 
 	#message("Succeed Generate EXE:${ExeName}")
 endfunction(GenExecutable)

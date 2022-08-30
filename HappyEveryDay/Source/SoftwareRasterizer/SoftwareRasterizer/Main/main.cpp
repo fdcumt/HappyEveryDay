@@ -7,12 +7,15 @@
 
 #include <iostream>
 #include <Windows.h>
+#include "HAL/PlatformApplicationMisc.h"
+
 using namespace std;
 
 
 LRESULT CALLBACK __WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 {
-	switch (msg) {
+	switch (msg) 
+	{
 	case WM_CLOSE:
 		MessageBox(NULL, "WM_CLOSE", "", NULL);
 		break;
@@ -25,6 +28,11 @@ LRESULT CALLBACK __WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int main()
 {
+	FGenericApplication *GenericApplication = FPlatformApplicationMisc::CreateApplication();
+	
+	FGenericWindow* GenericWindow = GenericApplication->MakeWindow();
+	GenericWindow->Test();
+
 	// 窗口属性初始化
 	HINSTANCE hIns = GetModuleHandle(0);
 	WNDCLASSEX wc;
@@ -42,7 +50,8 @@ int main()
 	wc.lpszClassName = "LYSM_class";					// 指向类名称的指针
 
 	// 为窗口注册一个窗口类
-	if (!RegisterClassEx(&wc)) {
+	if (!RegisterClassEx(&wc)) 
+	{
 		cout << "RegisterClassEx error : " << GetLastError() << endl;
 	}
 
@@ -61,25 +70,25 @@ int main()
 		hIns,						// 与窗口关联的模块实例的句柄
 		0							// 用来传递给窗口WM_CREATE消息
 	);
-	if (hWnd == 0) {
+	if (hWnd == 0) 
+	{
 		cout << "CreateWindowEx error : " << GetLastError() << endl;
+		return 0;
 	}
+	
 	UpdateWindow(hWnd);
 	ShowWindow(hWnd, SW_SHOW);
 
 	// 消息循环（没有会导致窗口卡死）
 	MSG msg = { 0 };
-	while (msg.message != WM_QUIT) {
+	while (msg.message != WM_QUIT) 
+	{
 		// 从消息队列中删除一条消息
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
 			DispatchMessage(&msg);
 		}
 	}
 
-
 	cout << "finished." << endl;
-	getchar();
-
-	getchar();
 	return 0;
 }
