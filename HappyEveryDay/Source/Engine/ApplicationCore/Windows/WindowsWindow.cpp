@@ -84,8 +84,7 @@ bool FWindowsWindow::RegisterClass()
 		printf("CreateWindowEx error [%lu]\n", GetLastError());
 		return false;
 	}
-
-
+	AddWindow(hWnd, this);
 
 	return true;
 }
@@ -95,11 +94,11 @@ LRESULT CALLBACK FWindowsWindow::AppWndProc(HWND hWnd, uint32 msg, WPARAM wParam
 	FWindowsWindow* Window = GetWindow(hWnd);
 	if (Window)
 	{
-		DebugLog(LogWindow, "abc %f", 0.5);
 		return Window->ProcessMessage(hWnd, msg, wParam, lParam);
 	}
 	else
 	{
+		WarningLog(LogWindow, "FWindowsWindow::AppWndProc not find window, use default");
 		return ::DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 }

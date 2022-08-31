@@ -2,37 +2,25 @@
 #include <stdarg.h>
 #include <windows.h>
 #include <stdio.h>
-#include <charconv>
+//#include <charconv>
 #include <intrin.h>
 #include <stdlib.h>
+
+#define PLATFORM_BREAK() (__nop(), __debugbreak())
 
 
 bool FLog::bOutputToConsole = true;
 
 
-// #define Checkf(expr, format, ...) CHECK_F_IMPL(expr, format, ##__VA_ARGS__)
-// 
-// #define UNLIKELY(x)			(x)
-
-#define PLATFORM_BREAK() (__nop(), __debugbreak())
-
-// #define CHECK_F_IMPL(expr, format, ...) \
-// 		{ \
-// 			if(UNLIKELY(!(expr))) \
-// 			{ \
-// 				printf(format, ##__VA_ARGS__);\
-// 				PLATFORM_BREAK(); \
-// 			} \
-// 		}
 
 
 
 void FLog::Logf(const FLogCategory&CategoryName, ELogVerbosity eVerbosity, const char* FormatStr, ...)
 {
 	const char* pLogVerbosityName = LogVerbosityToString(eVerbosity);
-	int32 AllocFormatLen = ::strlen(FormatStr)+CategoryName.CategoryName.length()+::strlen(pLogVerbosityName)+10;
+	int32 AllocFormatLen = static_cast<int32>(::strlen(FormatStr)+CategoryName.CategoryName.length()+::strlen(pLogVerbosityName)+10);
 	char *RealFormatStr =  new char[AllocFormatLen];
-	int32 RealFormatStrUseSize = snprintf(RealFormatStr, AllocFormatLen, "%s %s: ", CategoryName.CategoryName.data(),  FormatStr);
+	int32 RealFormatStrUseSize = snprintf(RealFormatStr, AllocFormatLen, "%s %s: %s\n", CategoryName.CategoryName.data(), pLogVerbosityName, FormatStr);
 	if (RealFormatStrUseSize<AllocFormatLen)
 	{
 		RealFormatStr[RealFormatStrUseSize+1] = '\0';
