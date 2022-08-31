@@ -8,5 +8,7 @@ public:
 public:
 	virtual void Test() = 0;
 
+	virtual bool Init() { return true; }
+	virtual bool Tick() { return true; }
 };
 

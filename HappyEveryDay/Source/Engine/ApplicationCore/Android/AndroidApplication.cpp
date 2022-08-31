@@ -43,3 +43,13 @@ void FAndroidApplication::DestroyWindow()
 	}
 }
 
+bool FAndroidApplication::PreInit()
+{
+	return true;
+}
+
+bool FAndroidApplication::Init()
+{
+	return true;
+}
+

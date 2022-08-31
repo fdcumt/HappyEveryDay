@@ -45,3 +45,29 @@ void FWindowsApplication::DestroyWindow()
 	}
 }
 
+bool FWindowsApplication::PreInit()
+{
+	return true;
+}
+
+bool FWindowsApplication::Init()
+{
+	FGenericWindow*pWindow = MakeWindow();
+	if (pWindow)
+	{
+		pWindow->Init();
+	}
+
+	return pWindow!=nullptr;
+}
+
+bool FWindowsApplication::Tick()
+{
+	if (Window)
+	{
+		return Window->Tick();
+	}
+
+	return false;
+}
+

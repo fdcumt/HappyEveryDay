@@ -14,6 +14,11 @@ public:
 	virtual FGenericWindow* MakeWindow();
 	virtual void DestroyWindow();
 
+	virtual bool PreInit();
+	virtual bool Init();
+
+	virtual bool Tick();
+
 
 protected:
 	static FWindowsApplication *WindowApplication;

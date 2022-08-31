@@ -4,34 +4,24 @@
 #include "Test/UtilityTest.h"
 #include "Templates/UtilityTemplate.h"
 #include "Delegates/Delegate.h"
-
+#include "HAL/PlatformApplicationMisc.h"
 #include <iostream>
 #include <Windows.h>
-#include "HAL/PlatformApplicationMisc.h"
 
-using namespace std;
-
-
-LRESULT CALLBACK __WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
-{
-	switch (msg) 
-	{
-	case WM_CLOSE:
-		MessageBox(NULL, "WM_CLOSE", "", NULL);
-		break;
-	default:
-		break;
-	}
-
-	return DefWindowProc(hWnd, msg, wParam, lParam);
-}
 
 int main()
 {
 	FGenericApplication *GenericApplication = FPlatformApplicationMisc::CreateApplication();
 	
-	FGenericWindow* GenericWindow = GenericApplication->MakeWindow();
-	GenericWindow->Test();
+	GenericApplication->PreInit();
+	GenericApplication->Init();
+
+	do
+	{
+
+	} while( GenericApplication->Tick());
+
+	/*
 
 	// 窗口属性初始化
 	HINSTANCE hIns = GetModuleHandle(0);
@@ -88,7 +78,17 @@ int main()
 			DispatchMessage(&msg);
 		}
 	}
+	*/
 
-	cout << "finished." << endl;
+// 	// 消息循环（没有会导致窗口卡死）
+// 	MSG msg = { 0 };
+// 	while (msg.message != WM_QUIT)
+// 	{
+// 		// 从消息队列中删除一条消息
+// 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+// 			DispatchMessage(&msg);
+// 		}
+// 	}
+
 	return 0;
 }

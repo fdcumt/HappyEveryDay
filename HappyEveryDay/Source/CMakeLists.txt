@@ -45,3 +45,11 @@ endif()
 
 AddSlnSubDir("${CMAKE_SOURCE_DIR}")
 
+
+# won't work before project()!   
+#https://stackoverflow.com/questions/4845198/fatal-error-no-target-architecture-in-visual-studio 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message("64 bit")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message("32 bit")
+endif()

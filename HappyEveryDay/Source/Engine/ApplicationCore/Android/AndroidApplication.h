@@ -14,7 +14,8 @@ public:
 	virtual FGenericWindow* MakeWindow();
 	virtual void DestroyWindow();
 
-
+	virtual bool PreInit();
+	virtual bool Init();
 
 protected:
 	static FAndroidApplication* AndroidApplication;
