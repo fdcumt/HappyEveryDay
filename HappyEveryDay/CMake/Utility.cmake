@@ -129,7 +129,7 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 	
 	
 	#添加静态链接库, 即xxx.lib
-	target_link_libraries("${LibName}" "${LibItems}")
+	#target_link_libraries("${LibName}" "${LibItems}")
 	
 	#静态连接库,  连接器->常规->附加库目录
 	target_link_directories("${LibName}" PRIVATE "${LibAbsDirs}")
@@ -147,7 +147,7 @@ endfunction(GenLib)
 
 
 #生成Application项目
-function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication)
+function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems bApplication)
 	#message("Begin Generate EXE:${ExeName}")
 	GenIncludeABSDir(IncludeAbsDirs "${IncludeDirs}" "${CurDir}")
 	GetAbslutePaths(LibAbsDirs "${LibDirs}" "${CurDir}")
@@ -164,7 +164,7 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication
 	include_directories("${IncludeAbsDirs}")
 
 	#添加静态链接库, 即xxx.lib
-	target_link_libraries("${ExeName}" "${LibItems}")
+	target_link_libraries("${ExeName}" "${NeedLibItems}")
 	
 	#静态连接库,  连接器->常规->附加库目录
 	target_link_directories("${ExeName}" PRIVATE "${LibAbsDirs}")
@@ -197,14 +197,14 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir bApplication
 endfunction(GenExecutable)
 
 #生成exe项目
-function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir)
-	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" false)
+function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems)
+	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" "${NeedLibItems}" false)
 endfunction(GenEXE)
 
 
 #生成Application项目
-function(GenApplication ExeName CurDir IncludeDirs LibDirs OutputDir)
-	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" true)
+function(GenApplication ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems)
+	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" "${NeedLibItems}" true)
 endfunction(GenApplication)
 
 

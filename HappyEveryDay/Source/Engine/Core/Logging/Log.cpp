@@ -12,9 +12,6 @@
 bool FLog::bOutputToConsole = true;
 
 
-
-
-
 void FLog::Logf(const FLogCategory&CategoryName, ELogVerbosity eVerbosity, const char* FormatStr, ...)
 {
 	const char* pLogVerbosityName = LogVerbosityToString(eVerbosity);
