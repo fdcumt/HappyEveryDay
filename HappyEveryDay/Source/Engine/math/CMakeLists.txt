@@ -11,7 +11,8 @@ set (LibName "Math")
 #静态连接库, 连接器->输入->附加依赖项
 set(LibItems "Utility")
 
-
+set(LocalDefineList
+	)
 ################这里面所有路径都要填相对路径, 相对于当前目录所在的路径 begin ##########################
 
 #设置Include目录, Properties->C/C++->General->Additional Include Directories
@@ -39,4 +40,5 @@ GenLib(
 		"${LibDirs}" 
 		"${OutputDir}" 
 		"${LibItems}" 
-	  )
+		"${LocalDefineList}"
+		)

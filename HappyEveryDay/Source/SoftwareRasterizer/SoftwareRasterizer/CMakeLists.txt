@@ -14,6 +14,10 @@ set(LibItems
 	"ApplicationCore"
 	)
 
+#针对该exe的宏定义
+set(LocalDefineList
+)
+
 
 ################这里面所有路径都要填相对路径, 相对于当前目录所在的路径 begin ##########################
 
@@ -45,4 +49,5 @@ GenApplication(
 		"${LibDirs}"
 		"${OutputDir}"
 		"${LibItems}"
+		"${LocalDefineList}"
 	)

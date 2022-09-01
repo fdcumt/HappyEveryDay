@@ -29,27 +29,42 @@ project("${SlnName}")
 	
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 
-set(DefineList)
+set(GlobalDefineList)
 
 #添加c++代码中宏定义
 if(PLATFORM_WINDOWS)
     message("PLATFORM_WINDOWS")
-    list(APPEND DefineList "PLATFORM_WINDOWS")
+    list(APPEND GlobalDefineList "PLATFORM_WINDOWS")
 elseif(PLATFORM_ANDROID)
     message("PLATFORM_ANDROID")
-    list(APPEND DefineList "PLATFORM_ANDROID")
+    list(APPEND GlobalDefineList "PLATFORM_ANDROID")
 elseif(PLATFORM_IOS)
     message("PLATFORM_IOS")
-    list(APPEND DefineList "PLATFORM_IOS")
+    list(APPEND GlobalDefineList "PLATFORM_IOS")
+endif()
+
+
+# ArchitectureType: x86,x64,arm64
+# won't work before project()!   
+#https://stackoverflow.com/questions/4845198/fatal-error-no-target-architecture-in-visual-studio 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message("64 bit")
+    set(ArchitectureType "x64")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message("32 bit")
+    set(ArchitectureType "x86")
+endif()
+
+#ArchitectureDirName: x86,x64
+if(ArchitectureType STREQUAL "x64")
+    set(ArchitectureDirName "x64")
+elseif(ArchitectureType STREQUAL "x86")
+    set(ArchitectureDirName "x86")
+else()
+    set(ArchitectureDirName "Unknown")
 endif()
 
 AddSlnSubDir("${CMAKE_SOURCE_DIR}")
 
 
-# won't work before project()!   
-#https://stackoverflow.com/questions/4845198/fatal-error-no-target-architecture-in-visual-studio 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message("64 bit")
-elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    message("32 bit")
-endif()
+

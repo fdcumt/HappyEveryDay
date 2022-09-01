@@ -82,18 +82,21 @@ endfunction(GenVSFolder)
 
 
 #执行一些公共操作
-function(DoCommonActions ProjectName)
+function(DoCommonActions ProjectName InDefineList)
 	#设置通用宏定义
-	foreach(DefineItem IN LISTS DefineList)
+	foreach(DefineItem IN LISTS GlobalDefineList)
 		add_definitions(-D"${DefineItem}")
-		message("Project [${ProjectName}] add define [${DefineItem}]")
+	endforeach()
+
+	foreach(LocalDefineItem IN LISTS InDefineList)
+		add_definitions(-D"${LocalDefineItem}")
 	endforeach()
 
 
 endfunction(DoCommonActions)
 
 #生成lib库
-function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
+function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir InDefineList)
 	#message("Begin Generate lib:${LibName} CurDir:${CurDir}")
 	GenIncludeABSDir(IncludeAbsDirs "${IncludeDirs}" "${CurDir}" )
 	GetAbslutePaths(LibAbsDirs "${LibDirs}" "${CurDir}")
@@ -114,12 +117,12 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 		#https://stackoverflow.com/questions/543203/cmake-runtime-output-directory-on-windows
 		#官方链接https://cmake.org/cmake/help/latest/prop_tgt/LIBRARY_OUTPUT_DIRECTORY_CONFIG.html
 		#官方链接https://cmake.org/cmake/help/latest/variable/CMAKE_LIBRARY_OUTPUT_DIRECTORY_CONFIG.html#variable:CMAKE_LIBRARY_OUTPUT_DIRECTORY_%3CCONFIG%3E
-		SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OutputAbsDir}")
-		SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OutputAbsDir}")
-		SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OutputAbsDir}")
-		SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OutputAbsDir}")
-		SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OutputAbsDir}")
-		SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OutputAbsDir}")
+		SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OutputAbsDir}/${ArchitectureDirName}")
+		SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OutputAbsDir}/${ArchitectureDirName}")
+		SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OutputAbsDir}/${ArchitectureDirName}")
+		SET( CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OutputAbsDir}/${ArchitectureDirName}")
+		SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OutputAbsDir}/${ArchitectureDirName}")
+		SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OutputAbsDir}/${ArchitectureDirName}")
 	endif(MSVC)
 	
 	add_library("${LibName}" "${all_files}")
@@ -128,26 +131,25 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir)
 	include_directories("${IncludeAbsDirs}")
 	
 	
-	#添加静态链接库, 即xxx.lib
+	#静态链接库无法添加依赖的链接 即xxx.lib
 	#target_link_libraries("${LibName}" "${LibItems}")
 	
-	#静态连接库,  连接器->常规->附加库目录
-	target_link_directories("${LibName}" PRIVATE "${LibAbsDirs}")
-	target_link_directories("${LibName}" PUBLIC "${LibAbsDirs}")
+	#静态连接库无法设置 连接器->常规->附加库目录
+	#target_link_directories("${LibName}" PRIVATE "${LibAbsDirs}")
+	#target_link_directories("${LibName}" PUBLIC "${LibAbsDirs}")
 	
 	# Creates a folder "libraries" and adds target this project under it
 	#set_property(TARGET "${LibName}" PROPERTY FOLDER "Libraries")
 	GenVSFolder("${LibName}" "${CurDir}" true)
 
-	#执行一些公共操作
-	DoCommonActions("${LibName}")
 
-	#message("Succeed Generate lib:${LibName}")
+	#执行一些公共操作
+	DoCommonActions("${LibName}" "${InDefineList}")
 endfunction(GenLib)
 
 
 #生成Application项目
-function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems bApplication)
+function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems bApplication InDefineList)
 	#message("Begin Generate EXE:${ExeName}")
 	GenIncludeABSDir(IncludeAbsDirs "${IncludeDirs}" "${CurDir}")
 	GetAbslutePaths(LibAbsDirs "${LibDirs}" "${CurDir}")
@@ -167,15 +169,17 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems
 	target_link_libraries("${ExeName}" "${NeedLibItems}")
 	
 	#静态连接库,  连接器->常规->附加库目录
-	target_link_directories("${ExeName}" PRIVATE "${LibAbsDirs}")
-	target_link_directories("${ExeName}" PUBLIC "${LibAbsDirs}")
+	foreach(LibAbsDirItem IN LISTS LibAbsDirs)
+		target_link_directories("${ExeName}" PRIVATE "${LibAbsDirItem}/${ArchitectureDirName}")
+		target_link_directories("${ExeName}" PUBLIC "${LibAbsDirItem}/${ArchitectureDirName}")
+	endforeach()
 	
 	#Creates a folder "libraries" and adds target project (math.vcproj) under it
 	#set_property(TARGET "${ExeName}" PROPERTY FOLDER "Executables")
 	GenVSFolder("${ExeName}" "${CurDir}" false)
 
 	#Properties->General->Output Directory
-	set_target_properties("${ExeName}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OutputAbsDir}")
+	set_target_properties("${ExeName}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OutputAbsDir}/${ArchitectureDirName}")
 	
 	#if(bApplication)
 	#	#message("GenExecutable EXE:${ExeName} use /SUBSYSTEM:WINDOWS")
@@ -191,20 +195,20 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems
 	#endif()
 
 	#执行一些公共操作
-	DoCommonActions("${ExeName}")
+	DoCommonActions("${ExeName}" "${InDefineList}")
 
 	#message("Succeed Generate EXE:${ExeName}")
 endfunction(GenExecutable)
 
 #生成exe项目
-function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems)
-	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" "${NeedLibItems}" false)
+function(GenEXE ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems InDefineList)
+	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" "${NeedLibItems}" false "${InDefineList}")
 endfunction(GenEXE)
 
 
 #生成Application项目
-function(GenApplication ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems)
-	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" "${NeedLibItems}" true)
+function(GenApplication ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems InDefineList)
+	GenExecutable("${ExeName}" "${CurDir}" "${IncludeDirs}" "${LibDirs}" "${OutputDir}" "${NeedLibItems}" true "${InDefineList}")
 endfunction(GenApplication)
 
 

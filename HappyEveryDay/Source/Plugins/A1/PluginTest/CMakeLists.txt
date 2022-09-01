@@ -9,6 +9,8 @@ set(LibName "PluginTest1")
 #静态连接库, 连接器->输入->附加依赖项
 set(LibItems "Utility;Math")
 
+set(LocalDefineList
+	)
 
 ################这里面所有路径都要填相对路径, 相对于当前目录所在的路径 begin ##########################
 
@@ -37,5 +39,6 @@ GenLib(
 		"${LibDirs}" 
 		"${OutputDir}" 
 		"${LibItems}" 
-	  )
+		"${LocalDefineList}"
+		)
 	  

@@ -13,7 +13,8 @@ set(LibItems
 	"Core"
 	)
 
-
+set(LocalDefineList
+	)
 ################这里面所有路径都要填相对路径, 相对于当前目录所在的路径 begin ##########################
 
 #设置Include目录, Properties->C/C++->General->Additional Include Directories
@@ -45,4 +46,5 @@ GenEXE(
 		"${LibDirs}"
 		"${OutputDir}"
 		"${LibItems}"
-	  )
+		"${LocalDefineList}"
+	)
