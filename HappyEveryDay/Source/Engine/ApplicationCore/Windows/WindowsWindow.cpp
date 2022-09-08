@@ -125,6 +125,9 @@ LRESULT FWindowsWindow::ProcessMessageInner(HWND InhWnd, uint32 msg, WPARAM wPar
 	case WM_QUIT:
 		GIsRequestingExit = true;
 		return 0;
+	case WM_DESTROY:
+		GIsRequestingExit = true;
+		return 0;
 	}
 
 	return ::DefWindowProc(hWnd, msg, wParam, lParam);

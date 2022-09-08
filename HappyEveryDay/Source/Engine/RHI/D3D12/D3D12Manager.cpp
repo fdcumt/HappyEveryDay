@@ -294,12 +294,7 @@ void FD3D12Manager::Render()
 
 void FD3D12Manager::Cleanup()
 {
-	// wait for GPU finish all frames
-	for (int32 i=0; i<FrameBufferCount; ++i)
-	{
-		FrameIndex = i;
-		WaitPreviousFrame();
-	}
+	WaitPreviousFrame();
 
 	// get swap chain out of full screen before exiting 
 	BOOL bFullScreen = false;
@@ -328,7 +323,8 @@ void FD3D12Manager::WaitPreviousFrame()
 {
 	// if the current fence value is less than "FenceValue", then we know the GPU has not finished Executing.
 	// the command queue since it has not reached the "commandQueue->Signal(Fence, FenceValue)" command
-	if (Fence[FrameIndex]->GetCompletedValue()<FenceValue[FrameIndex])
+	UINT64 CurrentCompleteValue = Fence[FrameIndex]->GetCompletedValue();
+	if (CurrentCompleteValue<FenceValue[FrameIndex])
 	{
 		// we have the fence create an event which is signaled once the fence`s current value is "FenceValue"
 		HRESULT hr = Fence[FrameIndex]->SetEventOnCompletion(FenceValue[FrameIndex], FenceEvent);
@@ -343,9 +339,9 @@ void FD3D12Manager::WaitPreviousFrame()
 		WaitForSingleObject(FenceEvent, INFINITE);
 	}
 
+	{ // Render new frame
 	// increase fence value for next frame
-	++FenceValue[FrameIndex];
-
-	FrameIndex = SwapChain->GetCurrentBackBufferIndex();
-
+		++FenceValue[FrameIndex];
+		FrameIndex = SwapChain->GetCurrentBackBufferIndex();
+	}
 }
