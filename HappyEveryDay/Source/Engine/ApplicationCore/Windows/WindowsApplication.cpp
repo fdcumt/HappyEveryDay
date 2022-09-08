@@ -71,3 +71,11 @@ bool FWindowsApplication::Tick()
 	return false;
 }
 
+void FWindowsApplication::ProcessMsgInput()
+{
+	if (Window)
+	{
+		Window->ProcessInputMsg();
+	}
+}
+

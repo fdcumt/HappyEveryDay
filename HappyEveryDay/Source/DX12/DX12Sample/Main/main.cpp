@@ -5,14 +5,6 @@
 #include <D3Dcompiler.h>
 #include <DirectXMath.h>
 #include "d3dx12.h"
-
-
-#include <windows.h>
-#include <d3d12.h>
-#include <dxgi1_4.h>
-#include <D3Dcompiler.h>
-#include <DirectXMath.h>
-#include "d3dx12.h"
 #include <string>
 
 // this will only call release if an object exists (prevents exceptions calling release on non existant objects)
@@ -347,8 +339,8 @@ bool InitD3D()
 	rtvHeapDesc.NumDescriptors = frameBufferCount; // number of descriptors for this heap.
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV; // this heap is a render target view heap
 
-													   // This heap will not be directly referenced by the shaders (not shader visible), as this will store the output from the pipeline
-													   // otherwise we would set the heap's flag to D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+	// This heap will not be directly referenced by the shaders (not shader visible), as this will store the output from the pipeline
+	// otherwise we would set the heap's flag to D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
 	if (FAILED(hr))

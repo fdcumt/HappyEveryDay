@@ -126,6 +126,7 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir InDefineList)
 	endif(MSVC)
 	
 	add_library("${LibName}" "${all_files}")
+	message(STATUS "Begin Generate lib:${LibName}")
 	
 	# Properties->C/C++->General->Additional Include Directories
 	include_directories("${IncludeAbsDirs}")
@@ -161,7 +162,8 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems
 	AddFiltersForVS("${all_files}" "${CurDir}")
 
 	add_executable("${ExeName}" "${all_files}")
-	
+	message(STATUS "Begin Generate EXE:${ExeName}")
+
 	# Properties->C/C++->General->Additional Include Directories
 	include_directories("${IncludeAbsDirs}")
 

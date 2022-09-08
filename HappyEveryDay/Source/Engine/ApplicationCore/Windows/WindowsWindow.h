@@ -18,16 +18,20 @@ public:
 public:
 	virtual bool Init();
 	virtual bool Tick() override;
+	void ProcessInputMsg();
 
-protected:
+	virtual HWND GetWnd() const override { return hWnd; }
+
+public:
 	bool RegisterClass();
 
-protected:
+public:
 	static LRESULT CALLBACK AppWndProc(HWND hWnd, uint32 msg, WPARAM wParam, LPARAM lParam);
 
 	/** Processes a single Windows message. */
-	LRESULT ProcessMessage(HWND hWnd, uint32 msg, WPARAM wParam, LPARAM lParam);
+	LRESULT ProcessMessageInner(HWND hWnd, uint32 msg, WPARAM wParam, LPARAM lParam);
 
+	static HWND GetFirstWindowHandle();
 	static FWindowsWindow* GetWindow(HWND InHWnd);
 	static void AddWindow(HWND InHWnd, FWindowsWindow*InWindow);
 

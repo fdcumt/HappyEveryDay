@@ -11,13 +11,15 @@ public:
 
 
 public:
-	virtual FGenericWindow* MakeWindow();
-	virtual void DestroyWindow();
+	virtual FGenericWindow* MakeWindow() override;
+	virtual void DestroyWindow() override;
 
-	virtual bool PreInit();
-	virtual bool Init();
+	virtual bool PreInit() override;
+	virtual bool Init() override;
 
-	virtual bool Tick();
+	virtual bool Tick() override;
+
+	virtual void ProcessMsgInput() override;
 
 
 protected:

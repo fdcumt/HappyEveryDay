@@ -18,5 +18,7 @@ public:
 	virtual bool Init();
 
 	virtual bool Tick() { return true; }
+
+	virtual void ProcessMsgInput() { }
 };
 

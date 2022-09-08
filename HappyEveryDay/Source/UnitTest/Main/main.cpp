@@ -6,6 +6,7 @@
 #include "Delegates/Delegate.h"
 #include <vector>
 #include "PlaceNew/PlaceNewTest.h"
+#include <windows.h>
 
 using namespace std;
 
@@ -185,12 +186,67 @@ void TestPlaceNew()
 		int a = 1;
 	};
 
+
+
+
 	new (PlaceNewTestRef) FPlaceNewTestTemp(10);
+}
+
+void TestUUID()
+{
+	// 定义结构体
+	struct s
+	{
+		int i;
+	};
+
+	// 为该结构体关联指定GUID
+	struct __declspec(uuid("93A1665E-C9FA-4147-AC3A-3CC855281AF8")) s;
+
+	// 获取GUID的测试代码:
+	s a, *b;
+	s &c = a;
+	__uuidof(s);
+	__uuidof(a);
+	__uuidof(b);
+	__uuidof(c);
+
+	{
+		LPOLESTR lpolestr;
+		StringFromCLSID(__uuidof(s), &lpolestr);
+		wprintf_s(L"UUID for struct:%s\n", lpolestr);
+		CoTaskMemFree(lpolestr);
+	}
+
+	{
+		LPOLESTR lpolestr;
+		StringFromCLSID(__uuidof(a), &lpolestr);
+		wprintf_s(L"UUID for variable:%s\n", lpolestr);
+		CoTaskMemFree(lpolestr);
+	}
+
+	{
+		LPOLESTR lpolestr;
+		StringFromCLSID(__uuidof(b), &lpolestr);
+		wprintf_s(L"UUID for point:%s\n", lpolestr);
+		CoTaskMemFree(lpolestr);
+	}
+
+	{
+		LPOLESTR lpolestr;
+		StringFromCLSID(__uuidof(c), &lpolestr);
+		wprintf_s(L"UUID for reference:%s\n", lpolestr);
+		CoTaskMemFree(lpolestr);
+	}
+
+	printf("\n\n\n");
+
 }
 
 
 int main()
 {
+	TestUUID();
 	TestPlaceNew();
 	//	MathTest();
 	// 	UtiltiyTest();

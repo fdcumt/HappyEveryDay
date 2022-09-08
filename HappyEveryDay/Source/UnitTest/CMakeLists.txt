@@ -15,6 +15,8 @@ set(LibItems
 
 #针对该exe的宏定义
 set(LocalDefineList
+		"UNICODE"
+		"_UNICODE"
 	)
 ################这里面所有路径都要填相对路径, 相对于当前目录所在的路径 begin ##########################
 

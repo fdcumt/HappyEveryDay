@@ -1,4 +1,5 @@
 #pragma once
+#include <windows.h>
 
 class FGenericWindow
 {
@@ -10,5 +11,10 @@ public:
 
 	virtual bool Init() { return true; }
 	virtual bool Tick() { return true; }
+
+	virtual HWND GetWnd() const { return nullptr; }
+
+	virtual void ProcessInputMsg() { }
+
 };
 

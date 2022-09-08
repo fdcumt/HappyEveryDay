@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "Logging/Log.h"
 #include "Misc/AssertionMacros.h"
+#include "Misc/CoreGlobals.h"
 
 DEFINE_LOG_CATEGORY(LogWindow);
 
@@ -38,6 +39,18 @@ bool FWindowsWindow::Tick()
 	return msg.message != WM_QUIT;
 }
 
+void FWindowsWindow::ProcessInputMsg()
+{
+	MSG msg = { 0 };
+
+	// 处理这一帧接收到的所有windows消息
+	while (::PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+	{
+		::TranslateMessage(&msg);
+		::DispatchMessage(&msg);
+	}
+}
+
 bool FWindowsWindow::RegisterClass()
 {
 	// 窗口属性初始化
@@ -59,7 +72,7 @@ bool FWindowsWindow::RegisterClass()
 	// 为窗口注册一个窗口类
 	if (!RegisterClassEx(&wc))
 	{
-		printf("RegisterClassEx error [%lu]\n", GetLastError());
+		ErrorLog(LogWindow, "FWindowsWindow::RegisterClass RegisterClassEx error [%lu]", GetLastError());
 		return false;
 	}
 
@@ -81,7 +94,7 @@ bool FWindowsWindow::RegisterClass()
 
 	if (hWnd == 0)
 	{
-		printf("CreateWindowEx error [%lu]\n", GetLastError());
+		ErrorLog(LogWindow, "FWindowsWindow::RegisterClass CreateWindowEx error [%lu]", GetLastError());
 		return false;
 	}
 	AddWindow(hWnd, this);
@@ -94,7 +107,7 @@ LRESULT CALLBACK FWindowsWindow::AppWndProc(HWND hWnd, uint32 msg, WPARAM wParam
 	FWindowsWindow* Window = GetWindow(hWnd);
 	if (Window)
 	{
-		return Window->ProcessMessage(hWnd, msg, wParam, lParam);
+		return Window->ProcessMessageInner(hWnd, msg, wParam, lParam);
 	}
 	else
 	{
@@ -103,10 +116,28 @@ LRESULT CALLBACK FWindowsWindow::AppWndProc(HWND hWnd, uint32 msg, WPARAM wParam
 	}
 }
 
-LRESULT FWindowsWindow::ProcessMessage(HWND InhWnd, uint32 msg, WPARAM wParam, LPARAM lParam)
+LRESULT FWindowsWindow::ProcessMessageInner(HWND InhWnd, uint32 msg, WPARAM wParam, LPARAM lParam)
 {
 	Checkf(InhWnd==hWnd, "FWindowsWindow::ProcessMessage InhWnd Error");
+
+	switch (msg)
+	{
+	case WM_QUIT:
+		GIsRequestingExit = true;
+		return 0;
+	}
+
 	return ::DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+HWND FWindowsWindow::GetFirstWindowHandle()
+{
+	for (const auto& WindowMapItem : WindowMap)
+	{
+		return WindowMapItem.first;
+	}
+
+	return nullptr;
 }
 
 FWindowsWindow* FWindowsWindow::GetWindow(HWND InHWnd)
