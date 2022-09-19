@@ -3,6 +3,7 @@
 #include <dxgi1_4.h>
 #include "d3dx12.h"
 #include "HAL/Platform.h"
+#include <DirectXMath.h>
 
 
 
@@ -49,5 +50,29 @@ protected:
 	// a handle to an event when our fence is unlocked by the GPU
 	HANDLE FenceEvent; 
 
+	// PSO containing a pipeline state
+	ID3D12PipelineState *PipelineStateObject = nullptr;
+
+	// root signature defines data shader will access
+	ID3D12RootSignature *RootSignature = nullptr;
+
+	// area that output from rasterizer will be stretched to
+	D3D12_VIEWPORT Viewport;
+
+	// the area to draw in. pixel outside that area will not be draw
+	D3D12_RECT ScissorRect;
+
+	// a default buffer in GPU memory that will we will load the vertex data for our triangle into
+	ID3D12Resource *VertexBuffer = nullptr;
+
+	// a structure containing a pointer to the vertex data in GPU memory
+	// the total size of the buffer
+	// the size of each element(vertex)
+	D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
+
+	struct FVertex
+	{
+		DirectX::XMFLOAT3 pos;
+	};
 
 };

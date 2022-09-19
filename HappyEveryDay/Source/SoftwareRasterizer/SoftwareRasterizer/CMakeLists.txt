@@ -38,6 +38,7 @@ set(IncludeDirs
 #静态连接库,  连接器->常规->附加库目录
 set(LibDirs 
 	"${RootDir}/Libs"
+	"${RootDir}/Shaders"
 	"${SlnAutoGenLibsDir}"
 	)
 
