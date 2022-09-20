@@ -294,7 +294,8 @@ bool FD3D12Manager::Initialize(HWND InHWnd)
 		// the input layout is used by input assembler so that it knows how to read the vertex data bound to it
 		D3D12_INPUT_ELEMENT_DESC InputLayout[] = 
 		{
-			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		};
 
 		D3D12_INPUT_LAYOUT_DESC InputLayoutDesc = {};
@@ -334,9 +335,9 @@ bool FD3D12Manager::Initialize(HWND InHWnd)
 		// a triangle
 		FVertex vList[] =
 		{
-			{{0.0f, 0.5f, 0.5f}},
-			{{0.5f, -0.5f, 0.5f}},
-			{{-0.5f, -0.5f, 0.5f}},
+			{0.0f, 0.5f, 0.5f, 1.f, 0.f, 0.f, 1.f},
+			{0.5f, -0.5f, 0.5f, 0.f, 1.f, 0.f, 1.f},
+			{-0.5f, -0.5f, 0.5f, 0.f, 0.f, 1.f, 1.f},
 		};
 
 		int32 vBufferSize = sizeof(vList);

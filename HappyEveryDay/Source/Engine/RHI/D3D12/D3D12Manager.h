@@ -72,7 +72,13 @@ protected:
 
 	struct FVertex
 	{
+		FVertex(float x, float y, float z, float r, float g, float b, float a)
+		 : pos(x, y, z)
+		 , color(r, g, b, a)
+		{
+		}
 		DirectX::XMFLOAT3 pos;
+		DirectX::XMFLOAT4 color;
 	};
 
 };
