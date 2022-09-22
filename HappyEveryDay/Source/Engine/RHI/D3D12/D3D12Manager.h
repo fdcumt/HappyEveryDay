@@ -70,6 +70,9 @@ protected:
 	// the size of each element(vertex)
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
 
+	ID3D12Resource *IndexBuffer = nullptr; // a default buffer in GPU memory that we will load index data for our triangle into
+	D3D12_INDEX_BUFFER_VIEW IndexBufferView; // a struct holding information about the index buffer
+
 	struct FVertex
 	{
 		FVertex(float x, float y, float z, float r, float g, float b, float a)

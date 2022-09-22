@@ -335,9 +335,10 @@ bool FD3D12Manager::Initialize(HWND InHWnd)
 		// a triangle
 		FVertex vList[] =
 		{
-			{0.0f, 0.5f, 0.5f, 1.f, 0.f, 0.f, 1.f},
-			{0.5f, -0.5f, 0.5f, 0.f, 1.f, 0.f, 1.f},
-			{-0.5f, -0.5f, 0.5f, 0.f, 0.f, 1.f, 1.f},
+			{ -0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f },
+			{  0.5f, -0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f },
+			{ -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f },
+			{  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  1.0f,  1.0f }
 		};
 
 		int32 vBufferSize = sizeof(vList);
@@ -386,6 +387,51 @@ bool FD3D12Manager::Initialize(HWND InHWnd)
 		// transition the vertex buffer data from copy destination state to vertex buffer state
 		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(VertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
+		// a quad (2 triangles)
+		DWORD iList[] = 
+		{
+			0, 1, 2, // first triangle
+			0, 3, 1  // second triangle
+		};
+
+		int32 iBufferSize = sizeof(iList);
+
+		// create default heap to hold index buffer
+		Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(iBufferSize), // resource description for a buffer
+			D3D12_RESOURCE_STATE_COPY_DEST, // start in the copy destination state
+			nullptr, // optimized clear value must be null for this type of resource
+			IID_PPV_ARGS(&IndexBuffer)
+		);
+		IndexBuffer->SetName(L"Index Buffer Resource Heap");
+
+		// create upload heap to upload index buffer
+		ID3D12Resource* iBufferUploadHeap = nullptr;
+		Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE, // no flags
+			&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+			nullptr,
+			IID_PPV_ARGS(&iBufferUploadHeap)
+		);
+		iBufferUploadHeap->SetName(L"Index Buffer Upload Resource Heap");
+
+		// store vertex buffer in upload heap
+		D3D12_SUBRESOURCE_DATA indexData = {};
+		indexData.pData = reinterpret_cast<BYTE*>(iList);
+		indexData.RowPitch = iBufferSize;
+		indexData.SlicePitch = iBufferSize;
+
+		// we are now creating a command with the command list to copy the data from the upload heap to the default heap
+		UpdateSubresources(CommandList, IndexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
+
+		// transition the vertex buffer data from copy destination state to vertex buffer state
+		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(IndexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+
 		// now we execute the command list to upload the initial assets (triangle data)
 		CommandList->Close();
 		ID3D12CommandList *ppCommandLists[] = { CommandList };
@@ -405,6 +451,11 @@ bool FD3D12Manager::Initialize(HWND InHWnd)
 		VertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
 		VertexBufferView.StrideInBytes = sizeof(FVertex);
 		VertexBufferView.SizeInBytes = vBufferSize;
+
+		// create a index buffer view for the triangle. we get the GPU memory address to the vertex pointer using GetGPUVirtualAddress() method
+		IndexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
+		IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		IndexBufferView.SizeInBytes = iBufferSize;
 
 		// fill out the viewport
 		Viewport.TopLeftX = 0;
@@ -469,7 +520,8 @@ void FD3D12Manager::UpdatePipeline()
 	CommandList->RSSetScissorRects(1, &ScissorRect);
 	CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	CommandList->IASetVertexBuffers(0, 1, &VertexBufferView); // set the vertex buffer(using the buffer view)
-	CommandList->DrawInstanced(3, 1, 0, 0);
+	CommandList->IASetIndexBuffer(&IndexBufferView);
+	CommandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	// transition the "FrameIndex" render target from the render target state to the present state.
 	// if the debug layer is enabled, you will receive a warning if present is called on the render target 
