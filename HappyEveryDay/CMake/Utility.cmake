@@ -175,6 +175,8 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems
 		target_link_directories("${ExeName}" PRIVATE "${LibAbsDirItem}/${ArchitectureDirName}")
 		target_link_directories("${ExeName}" PUBLIC "${LibAbsDirItem}/${ArchitectureDirName}")
 	endforeach()
+
+	set_target_properties("${ExeName}" PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
 	
 	#Creates a folder "libraries" and adds target project (math.vcproj) under it
 	#set_property(TARGET "${ExeName}" PROPERTY FOLDER "Executables")

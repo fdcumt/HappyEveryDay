@@ -26,7 +26,7 @@ public:
 	}
 
 public:
-	FString CategoryName;
+	FStdString CategoryName;
 };
 
 class FLog

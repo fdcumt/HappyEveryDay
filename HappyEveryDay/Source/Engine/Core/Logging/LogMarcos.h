@@ -1,4 +1,5 @@
 #pragma once
+#include "Log.h"
 
 
 #define DECLARE_LOG_CATEGORY_EXTERN(CategoryName) extern struct FLogCategory LogCategory_##CategoryName

@@ -6,12 +6,12 @@
 #include <intsafe.h>
 
 
-inline FString HrToString(HRESULT hr)
+inline FStdString HrToString(HRESULT hr)
 {
 	char s_str[64] = {0};
 
 	sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
-	return FString(s_str);
+	return FStdString(s_str);
 }
  
 class FHrExeception : public std::runtime_error

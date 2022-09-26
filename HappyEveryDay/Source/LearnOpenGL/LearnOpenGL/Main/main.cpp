@@ -5,6 +5,8 @@
 #include "HAL/Platform.h"
 #include "Logging/LogMarcos.h"
 #include "Logging/Log.h"
+#include "OperatorFiles/OperatorFile.h"
+#include "OperatorFiles/Paths.h"
 
 
 DEFINE_LOG_CATEGORY(LearnOpenGL);
@@ -17,25 +19,24 @@ void processInput(GLFWwindow* window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const char *VertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
-
-const char* FragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\n\0";
-
+const char *VertexShaderSource = nullptr;
+const char* FragmentShaderSource = nullptr;
 
 
 
 int main()
 {
+	{	// read shader
+		FStdString VertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/VertexShader.txt";
+		int32 VertexShaderSourceLen = 0;
+		VertexShaderSource = FOperatorFile::ReadFile(VertexShaderFileName.data(), VertexShaderSourceLen);
+
+		FStdString FragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/FragmentShader.txt";
+		int32 FragmentShaderSourceLen = 0;
+		FragmentShaderSource = FOperatorFile::ReadFile(FragmentShaderFileName.data(), FragmentShaderSourceLen);
+	}
+
+
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
