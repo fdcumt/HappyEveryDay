@@ -7,6 +7,7 @@
 #include "Logging/Log.h"
 #include "OperatorFiles/OperatorFile.h"
 #include "OperatorFiles/Paths.h"
+#include "Shader/Shader.h"
 
 
 DEFINE_LOG_CATEGORY(LearnOpenGL);
@@ -26,17 +27,6 @@ const char* FragmentShaderSource = nullptr;
 
 int main()
 {
-	{	// read shader
-		FStdString VertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/VertexShader.txt";
-		int32 VertexShaderSourceLen = 0;
-		VertexShaderSource = FOperatorFile::ReadFile(VertexShaderFileName.data(), VertexShaderSourceLen);
-
-		FStdString FragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/FragmentShader.txt";
-		int32 FragmentShaderSourceLen = 0;
-		FragmentShaderSource = FOperatorFile::ReadFile(FragmentShaderFileName.data(), FragmentShaderSourceLen);
-	}
-
-
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
@@ -75,64 +65,16 @@ int main()
 	}
 
 	// build and compile our shader program
-
-	// vertex shader
-	uint32 VertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-	// 将shader源码放入OpenGL管理的某个地方, 后续可以通过VertexShader直接使用
-	glShaderSource(VertexShader, 1, &VertexShaderSource, nullptr);
-	glCompileShader(VertexShader);
-
-	int32 Succeed;
-	char infoLog[512] = {0};
-
-	glGetShaderiv(VertexShader, GL_COMPILE_STATUS, &Succeed);
-
-	if (!Succeed)
-	{
-		glGetShaderInfoLog(VertexShader, 512, nullptr, infoLog);
-		ErrorLog(LearnOpenGL, "%s", infoLog);
-		return -1;
-	}
-
-	// fragment shader
-	uint32 FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(FragmentShader, 1, &FragmentShaderSource, nullptr);
-	glCompileShader(FragmentShader);
-
-	glGetShaderiv(FragmentShader, GL_COMPILE_STATUS, &Succeed);
-
-	if (!Succeed)
-	{
-		glGetShaderInfoLog(FragmentShader, 512, nullptr, infoLog);
-		ErrorLog(LearnOpenGL, "%s", FragmentShader);
-		return -1;
-	}
-
-
-	// link shader
-	uint32 ShaderProgram = glCreateProgram();
-	glAttachShader(ShaderProgram, VertexShader);
-	glAttachShader(ShaderProgram, FragmentShader);
-	glLinkProgram(ShaderProgram);
-
-	// check for linking error
-	glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Succeed);
-	if (!Succeed)
-	{
-		glGetProgramInfoLog(ShaderProgram, 512, nullptr, infoLog);
-		ErrorLog(LearnOpenGL, "%s", FragmentShader);
-		return -1;
-	}
-
-	glDeleteShader(VertexShader);
-	glDeleteShader(FragmentShader);
+	FStdString VertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/VertexShader.vs";
+	FStdString FragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/FragmentShader.fs";
+	FShader Shader(VertexShaderFileName, FragmentShaderFileName);
 
 
 	float Vertices[] = {
-		-0.5f, -0.5f, 0.0f, // left  
-		 0.5f, -0.5f, 0.0f, // right 
-		 0.0f,  0.5f, 0.0f  // top   
+		// positions         // colors
+		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 	};
 
 	uint32 VBO, VAO;
@@ -145,8 +87,11 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GL_FLOAT), nullptr);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GL_FLOAT), nullptr);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GL_FLOAT), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// safe unbind VBO and VAO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -170,14 +115,13 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// draw out first triangle
-		glUseProgram(ShaderProgram);
+		Shader.UseProgram();
 
-		float timeValue = glfwGetTime();
-		float greenValue = sin(timeValue);
-
-		int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
-		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+		//float timeValue = glfwGetTime();
+		//float greenValue = sin(timeValue);
+		//
+		//int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
+		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -191,7 +135,7 @@ int main()
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(ShaderProgram);
+	Shader.DeleteProgram();
 
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
