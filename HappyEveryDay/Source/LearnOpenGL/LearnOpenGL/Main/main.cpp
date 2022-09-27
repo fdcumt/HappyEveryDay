@@ -172,6 +172,13 @@ int main()
 
 		// draw out first triangle
 		glUseProgram(ShaderProgram);
+
+		float timeValue = glfwGetTime();
+		float greenValue = sin(timeValue);
+
+		int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
+		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
