@@ -17,6 +17,7 @@ set(LocalDefineList
 #设置Include目录, Properties->C/C++->General->Additional Include Directories
 set(IncludeDirs
 		"."
+		"GeneratedHeaders"
 	)
 
 #静态连接库,  连接器->常规->附加库目录
