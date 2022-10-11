@@ -1,3 +1,9 @@
 #pragma once
+#include "HAL/Platform.h"
 
-#define STB
+class FSTBImage
+{
+public:
+	static uint8* StbiLoad(const char* filename, int* x, int* y, int* channels_in_file, int desired_channels);
+
+};
