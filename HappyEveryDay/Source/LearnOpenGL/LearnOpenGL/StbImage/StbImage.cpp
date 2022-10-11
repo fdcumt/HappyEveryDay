@@ -7,3 +7,8 @@ uint8* FSTBImage::StbiLoad(const char* filename, int* x, int* y, int* channels_i
 {
 	return stbi_load(filename, x, y, channels_in_file, desired_channels);
 }
+
+void FSTBImage::StbiImageFree(void* pData)
+{
+	stbi_image_free(pData);
+}

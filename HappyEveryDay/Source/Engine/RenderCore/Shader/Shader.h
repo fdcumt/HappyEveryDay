@@ -24,7 +24,7 @@ public:
 
 public:
 	bool IsInitSucceed() const { return bInitSucceed; }
-
+	uint32 GetID() const { return ProgramID; }
 
 public:
 	void UseProgram();
