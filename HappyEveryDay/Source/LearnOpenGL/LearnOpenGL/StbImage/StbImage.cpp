@@ -12,3 +12,8 @@ void FSTBImage::StbiImageFree(void* pData)
 {
 	stbi_image_free(pData);
 }
+
+void FSTBImage::SetFlipVerticallyOnLoad(bool bFlip)
+{
+	stbi_set_flip_vertically_on_load(bFlip); // tell stb_image.h to flip loaded texture's on the y-axis.
+}

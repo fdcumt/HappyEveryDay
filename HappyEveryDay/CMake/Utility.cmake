@@ -103,7 +103,7 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir InDefineList)
 	GetAbslutePaths(OutputAbsDir "${OutputDir}" "${CurDir}")
 
 	#所有文件保存在一个变量中		
-	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc)
+	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc *.inl *.hpp)
 
 	#生成vs中对应的文件夹
 	AddFiltersForVS("${all_files}" "${CurDir}")
@@ -129,7 +129,9 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir InDefineList)
 	message(STATUS "Begin Generate lib:${LibName}")
 	
 	# Properties->C/C++->General->Additional Include Directories
-	include_directories("${IncludeAbsDirs}")
+	if(NOT ("${IncludeAbsDirs} " STREQUAL " "))
+		include_directories("${IncludeAbsDirs}")
+	endif()
 	
 	
 	#静态链接库无法添加依赖的链接 即xxx.lib
@@ -157,15 +159,18 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems
 	GetAbslutePaths(OutputAbsDir "${OutputDir}" "${CurDir}")
 
 	#所有文件保存在一个变量中		
-	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc)
-	file(GLOB_RECURSE cpp_files *.cpp *.c *.cc)
+	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc *.inl *.hpp)
+	#file(GLOB_RECURSE cpp_files *.cpp *.c *.cc)
 	AddFiltersForVS("${all_files}" "${CurDir}")
 
 	add_executable("${ExeName}" "${all_files}")
 	message(STATUS "Begin Generate EXE:${ExeName}")
 
 	# Properties->C/C++->General->Additional Include Directories
-	include_directories("${IncludeAbsDirs}")
+	if(NOT ("${IncludeAbsDirs} " STREQUAL " "))
+		include_directories("${IncludeAbsDirs}")
+	endif()
+	
 
 	#添加静态链接库, 即xxx.lib
 	target_link_libraries("${ExeName}" "${NeedLibItems}")

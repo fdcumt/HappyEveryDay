@@ -15,6 +15,7 @@ set(LibItems
 	"RenderCore"
 	"GeneratedHeaders"
 	"glfw3.lib"
+	"glm"
 	)
 
 #针对该exe的宏定义
@@ -34,6 +35,7 @@ set(IncludeDirs
 		"ApplicationCore"
 		"RenderCore"
 		"GeneratedHeaders"
+		"glm"
 	)
 
 #静态连接库,  连接器->常规->附加库目录

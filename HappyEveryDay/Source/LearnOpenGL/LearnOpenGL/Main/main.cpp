@@ -1,5 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include <iostream>
 #include "HAL/Platform.h"
@@ -23,8 +26,6 @@ const unsigned int SCR_HEIGHT = 600;
 
 const char *VertexShaderSource = nullptr;
 const char* FragmentShaderSource = nullptr;
-
-
 
 int main()
 {
@@ -109,6 +110,7 @@ int main()
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//glBindVertexArray(0);
 
+	FSTBImage::SetFlipVerticallyOnLoad(true);
 
 	uint32 TextureID1;
 	{
