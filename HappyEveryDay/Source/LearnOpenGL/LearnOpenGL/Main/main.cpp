@@ -210,6 +210,13 @@ int main()
 		//int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
 		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
+		glm::mat4 transform = glm::mat4(1.0f);
+		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f));
+		transform = glm::rotate(transform, float(glfwGetTime()), glm::vec3(0.f, 0.f, 1.f));
+
+		Shader.UseProgram();
+		uint32 transformLoc = glGetUniformLocation(Shader.GetID(), "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
 		float timeValue = glfwGetTime();
 		float MixValue = sin(timeValue);
