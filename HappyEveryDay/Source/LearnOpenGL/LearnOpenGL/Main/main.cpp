@@ -213,6 +213,7 @@ int main()
 		glm::mat4 transform = glm::mat4(1.0f);
 		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f));
 		transform = glm::rotate(transform, float(glfwGetTime()), glm::vec3(0.f, 0.f, 1.f));
+		transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		Shader.UseProgram();
 		uint32 transformLoc = glGetUniformLocation(Shader.GetID(), "transform");
@@ -224,6 +225,16 @@ int main()
 		Shader.SetFloat("MixValue", MixValue);
 
 		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		transform = glm::mat4(1.0f);
+		transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.f));
+		transform = glm::rotate(transform, float(glfwGetTime()), glm::vec3(0.f, 0.f, 1.f));
+
+		//Shader.UseProgram();
+		transformLoc = glGetUniformLocation(Shader.GetID(), "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
