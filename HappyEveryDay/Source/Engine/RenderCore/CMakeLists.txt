@@ -18,6 +18,7 @@ set(LocalDefineList
 set(IncludeDirs
 		"."
 		"Core"
+		"glm"
 		"${RootDir}/Include"
 	)
 
