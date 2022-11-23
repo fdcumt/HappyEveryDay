@@ -228,6 +228,8 @@ int main()
 	Shader.SetInt("Texture1", 0);
 	Shader.SetInt("Texture2", 1);
 
+	glEnable(GL_DEPTH_TEST);
+
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
@@ -238,7 +240,9 @@ int main()
 
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+
+		// 清除color buffer和depth buffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// 把TextureID1和第0个texture绑定
 		glActiveTexture(GL_TEXTURE0);
