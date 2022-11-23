@@ -130,6 +130,19 @@ int main()
 		1, 2, 3  // second triangle
 	};
 
+	glm::vec3 CubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
 	unsigned int VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -262,21 +275,31 @@ int main()
 		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
 		// 设置三个变换矩阵
-		glm::mat4 ModelMatrix = glm::mat4(1.0f);
 		glm::mat4 ViewMatrix = glm::mat4(1.0f);
 		glm::mat4 ProjectionMatrix = glm::mat4(1.0f);
 
-		ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime()*glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 		ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 		ProjectionMatrix = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH /(float)SCR_HEIGHT, 0.1f, 100.f);
 
-		Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+		//Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 		Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
 		Shader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
 		glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		for (const glm::vec3& ItemPosition : CubePositions)
+		{
+			glm::mat4 ModelMatrix = glm::mat4(1.0f);
+			ModelMatrix = glm::translate(ModelMatrix, ItemPosition);
+			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+			Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+
+			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
