@@ -103,7 +103,7 @@ function(GenLib LibName CurDir IncludeDirs LibDirs OutputDir InDefineList)
 	GetAbslutePaths(OutputAbsDir "${OutputDir}" "${CurDir}")
 
 	#所有文件保存在一个变量中		
-	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc *.inl *.hpp)
+	file(GLOB_RECURSE all_files *.h *.cpp *.c *.cc *.inl *.hpp glm.natvis)
 
 	#生成vs中对应的文件夹
 	AddFiltersForVS("${all_files}" "${CurDir}")

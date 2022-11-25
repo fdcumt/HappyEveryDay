@@ -20,5 +20,8 @@ public:
 	virtual bool Tick() { return true; }
 
 	virtual void ProcessMsgInput() { }
+
+protected:
+	
 };
 

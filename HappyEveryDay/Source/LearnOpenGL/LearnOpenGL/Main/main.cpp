@@ -12,13 +12,139 @@
 #include "OperatorFiles/Paths.h"
 #include "Shader/Shader.h"
 #include "StbImage/StbImage.h"
+#include "Camera/Camera.h"
+#include "Message/MessageDefine.h"
+#include "Message/MessageBase.h"
 
 
 DEFINE_LOG_CATEGORY(LearnOpenGL);
 
 
+FCamera Camera;
+
+float MoseMoveXSpeedFactor = 5;
+float MoseMoveYSpeedFactor = 5;
+
+bool bMousePosInit = false;
+float MousePosX = 0.f;
+float MousePosY = 0.f;
+
+float MouseXDeltaMove = 0.f;
+float MouseYDeltaMove = 0.f;
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+void ProcessKeyEvent(GLFWwindow* window, int key, int action, int mods)
+{
+	NS_Message::EInputEvent InputType = NS_Message::IE_Released;
+	NS_Message::EMesssageType MessageType = NS_Message::E_MessageType_None;
+
+	switch (action)
+	{
+	case GLFW_RELEASE:
+	{
+		InputType = NS_Message::IE_Released;
+		break;
+	}
+	case GLFW_PRESS:
+	{
+		InputType = NS_Message::IE_Pressed;
+		break;
+	}
+	case GLFW_REPEAT:
+	{
+		InputType = NS_Message::IE_Repeat;
+		break;
+	}
+	}
+
+	switch (key)
+	{
+	case GLFW_MOUSE_BUTTON_LEFT:
+	{
+		MessageType = NS_Message::E_MouseButton_Left;
+		break;
+	}
+	case GLFW_MOUSE_BUTTON_RIGHT:
+	{
+		MessageType = NS_Message::E_MouseButton_Right;
+		break;
+	}
+	case GLFW_KEY_A:
+	{
+		MessageType = NS_Message::E_Keyboard_A;
+		break;
+	}
+	case GLFW_KEY_S:
+	{
+		MessageType = NS_Message::E_Keyboard_S;
+		break;
+	}
+	case GLFW_KEY_D:
+	{
+		MessageType = NS_Message::E_Keyboard_D;
+		break;
+	}
+	case GLFW_KEY_W:
+	{
+		MessageType = NS_Message::E_Keyboard_W;
+		break;
+	}
+	}
+
+	if (MessageType != NS_Message::E_MessageType_None)
+	{
+		NS_Message::MessageInfoList[MessageType].InputEvent = InputType;
+	}
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	ProcessKeyEvent(window, button, action, mods);
+}
+
+void cb_key(GLFWwindow* win, int key, int code, int action, int mods) 
+{
+	ProcessKeyEvent(win, key, action, mods);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (bMousePosInit)
+	{
+		MouseXDeltaMove = MousePosX - xpos;
+		MouseYDeltaMove = MousePosY - ypos;
+		DebugLog(LearnOpenGL, "MouseYDeltaMove:%f", MouseYDeltaMove);
+	}
+	else
+	{
+		bMousePosInit = true;
+	}
+
+	MousePosX = xpos;
+	MousePosY = ypos;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	
+}
+
+void cursor_enter_callback(GLFWwindow* window, int entered)
+{
+	if (entered)
+	{
+		// The cursor entered the content area of the window
+	}
+	else
+	{
+		// The cursor left the content area of the window
+	}
+}
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -36,6 +162,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -51,6 +178,12 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	glfwSetKeyCallback(window, cb_key);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorEnterCallback(window, cursor_enter_callback);
 
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
@@ -73,7 +206,7 @@ int main()
 
 
 // 	float vertices[] = {
-// 		// positions          // texture coords
+// 		// positions          // texture coordinate
 // 		 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
 // 		 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
 // 		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
@@ -242,11 +375,21 @@ int main()
 	Shader.SetInt("Texture2", 1);
 
 	glEnable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
+
+	{ // init camera
+		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 1000.f);
+	}
 
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
+		// update logic
+		Camera.DoMovement(NS_Message::MessageInfoList, MouseXDeltaMove, MouseYDeltaMove);
+		MouseXDeltaMove = 0.f;
+		MouseYDeltaMove = 0.f;
+
 		// input
 		// -----
 		processInput(window);
@@ -254,7 +397,7 @@ int main()
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-		// 清除color buffer和depth buffer
+		// 清除color buffer 和 depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// 把TextureID1和第0个texture绑定
@@ -274,15 +417,17 @@ int main()
 		//int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
 		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
-		// 设置三个变换矩阵
-		glm::mat4 ViewMatrix = glm::mat4(1.0f);
+		// 设置变换矩阵
+		//glm::mat4 ViewMatrix = glm::mat4(1.0f);
 		glm::mat4 ProjectionMatrix = glm::mat4(1.0f);
 
-		ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-		ProjectionMatrix = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH /(float)SCR_HEIGHT, 0.1f, 100.f);
+		Camera.RecalculateViewMatrix();
 
-		//Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
-		Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+		//ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+		ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH /(float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
+
+		Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+		//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
 		Shader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
 		glBindVertexArray(VAO);
