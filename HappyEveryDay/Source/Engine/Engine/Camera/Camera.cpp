@@ -1,7 +1,6 @@
 #include "Camera.h"
 #include <cmath>
 #include "Logging/LogMarcos.h"
-#include "Logging/Log.h"
 
 DEFINE_LOG_CATEGORY(CameraLog);
 
@@ -17,7 +16,6 @@ FCamera::FCamera()
 {
 
 }
-
 
 void FCamera::Init(const glm::vec3& InPosition, const float InPitch, const float InYaw, const float InFov, const float InNeerPlane, const float InFarPlane)
 {
@@ -136,7 +134,8 @@ void FCamera::RecalculateViewMatrix()
 
 		Position += Forward*ForwardMoveDelta;
 		Position += Right*RightMoveDelta;
-
+		
+		//DebugLog(CameraLog, "FCamera::RecalculateViewMatrix ForwardMoveDelta[%f] RightMoveDelta[%f]", ForwardMoveDelta, RightMoveDelta);
 
 		ForwardMoveDelta = 0.f;
 		RightMoveDelta = 0.f;
