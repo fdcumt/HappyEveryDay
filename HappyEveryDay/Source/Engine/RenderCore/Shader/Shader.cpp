@@ -98,6 +98,14 @@ void FShader::SetFloat(const FStdString& InUniformName, float Value)
 	glUniform1f(UniformID, Value);
 }
 
+void FShader::SetVector(const FStdString& InUniformName, float InX, float InY, float InZ)
+{
+	CheckShaderValid("FShader::SetFloat shader init failed, please check");
+
+	int32 UniformID = glGetUniformLocation(ProgramID, InUniformName.data());
+	glUniform3f(UniformID, InX, InY, InZ);
+}
+
 void FShader::SetMaterix4fv(const FStdString& InUniformName, const float* pValue, int32 InCount /*= 1*/, bool bTranspose /*= false*/)
 {
 	CheckShaderValid("FShader::SetFloat shader init failed, please check");

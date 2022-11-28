@@ -33,6 +33,7 @@ public:
 	void SetBool(const FStdString &InUniformName, bool Value);
 	void SetInt(const FStdString& InUniformName, int32 Value);
 	void SetFloat(const FStdString& InUniformName, float Value);
+	void SetVector(const FStdString& InUniformName, float InX, float InY, float InZ);
 	void SetMaterix4fv(const FStdString& InUniformName, const float *pValue, int32 InCount = 1, bool bTranspose = false);
 
 

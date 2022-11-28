@@ -205,6 +205,11 @@ int main()
 	FShader Shader(VertexShaderFileName, FragmentShaderFileName);
 
 
+	// build and compile our shader program
+	FStdString LightVertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/LightVertexShader.vs";
+	FStdString LightFragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/LightFragmentShader.fs";
+	FShader LightShader(LightVertexShaderFileName, LightFragmentShaderFileName);
+
 // 	float vertices[] = {
 // 		// positions          // texture coordinate
 // 		 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
@@ -277,25 +282,39 @@ int main()
 	};
 
 	unsigned int VBO, VAO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
+	{
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+		glGenBuffers(1, &EBO);
 
-	glBindVertexArray(VAO);
+		glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
 
-	// texture coordinate attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+		// texture coordinate attribute
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+	}
+
+	unsigned int LightVAO;
+	{
+		glGenVertexArrays(1, &LightVAO);
+		glBindVertexArray(LightVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+	}
 
 	// safe unbind VBO and VAO
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -444,7 +463,28 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		{ // for light
+			LightShader.UseProgram();
+			// don't forget to use the corresponding shader program first (to set the uniform)
+			LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
+			LightShader.SetVector("lightColor", 1.0f, 1.0f, 1.0f);
 
+			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+
+			glBindVertexArray(LightVAO);
+
+			glm::mat4 ModelMatrix = glm::mat4(1.0f);
+			glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+			ModelMatrix = glm::translate(ModelMatrix, lightPos);
+			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+			LightShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+
+			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
