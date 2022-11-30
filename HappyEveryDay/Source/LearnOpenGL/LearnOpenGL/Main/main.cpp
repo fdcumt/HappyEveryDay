@@ -210,6 +210,11 @@ int main()
 	FStdString LightFragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/LightFragmentShader.fs";
 	FShader LightShader(LightVertexShaderFileName, LightFragmentShaderFileName);
 
+	// build and compile our shader program
+	FStdString ObjectVSFileName= FPaths::GetContentDir() + "/ShaderFiles/ObjectVertexShader.vs";
+	FStdString ObjectFSFileName = FPaths::GetContentDir() + "/ShaderFiles/ObjectFragmentShader.fs";
+	FShader ObjectShader(ObjectVSFileName, ObjectFSFileName);
+
 // 	float vertices[] = {
 // 		// positions          // texture coordinate
 // 		 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
@@ -315,6 +320,19 @@ int main()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
 	}
+
+	unsigned int ObjectVAO;
+	{
+		glGenVertexArrays(1, &ObjectVAO);
+		glBindVertexArray(ObjectVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+	}
+
 
 	// safe unbind VBO and VAO
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -449,24 +467,26 @@ int main()
 		//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
 		Shader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
-		glBindVertexArray(VAO);
-
-		for (const glm::vec3& ItemPosition : CubePositions)
-		{
-			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-			ModelMatrix = glm::translate(ModelMatrix, ItemPosition);
-			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-
-			Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
-
-			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+// 		{ // for normal object
+// 			glBindVertexArray(VAO);
+// 
+// 			for (const glm::vec3& ItemPosition : CubePositions)
+// 			{
+// 				glm::mat4 ModelMatrix = glm::mat4(1.0f);
+// 				ModelMatrix = glm::translate(ModelMatrix, ItemPosition);
+// 				ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+// 
+// 				Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+// 
+// 				//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 		}
 
 		{ // for light
 			LightShader.UseProgram();
 			// don't forget to use the corresponding shader program first (to set the uniform)
-			LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
+			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
 			LightShader.SetVector("lightColor", 1.0f, 1.0f, 1.0f);
 
 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
@@ -475,7 +495,7 @@ int main()
 			glBindVertexArray(LightVAO);
 
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-			glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+			glm::vec3 lightPos(1.2f, 1.0f, -2.0f);
 			ModelMatrix = glm::translate(ModelMatrix, lightPos);
 			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 
@@ -485,6 +505,27 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		
+		{ // for Object
+			ObjectShader.UseProgram();
+			// don't forget to use the corresponding shader program first (to set the uniform)
+			ObjectShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
+			ObjectShader.SetVector("lightColor", 1.0f, 1.0f, 1.0f);
+
+			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+
+			glBindVertexArray(LightVAO);
+
+			glm::mat4 ModelMatrix = glm::mat4(1.0f);
+			glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
+			ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
+			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+			ObjectShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+
+			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -493,6 +534,8 @@ int main()
 	}
 
 	glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &LightVAO);
+	glDeleteVertexArrays(1, &ObjectVAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
 	Shader.DeleteProgram();
