@@ -15,9 +15,13 @@
 #include "Camera/Camera.h"
 #include "Message/MessageDefine.h"
 #include "Message/MessageBase.h"
+#include "Math/Vector.h"
+#include "Math/Vector2D.h"
 
 
 DEFINE_LOG_CATEGORY(LearnOpenGL);
+
+#define OFFSET(Struct, Member) (&((Struct*)0)->Member)
 
 
 FCamera Camera;
@@ -215,57 +219,57 @@ int main()
 	FStdString ObjectFSFileName = FPaths::GetContentDir() + "/ShaderFiles/ObjectFragmentShader.fs";
 	FShader ObjectShader(ObjectVSFileName, ObjectFSFileName);
 
-// 	float vertices[] = {
-// 		// positions          // texture coordinate
-// 		 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
-// 		 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
-// 		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
-// 		-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
-// 	};
+
+	struct FVerticeInfo
+	{
+		FVector Position;
+		FVector2D TextureCoord;
+		FVector Normal;
+	};
 
 	float vertices[] = {
-    // positions          // texture coordinates
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		// positions          // texture coordinates    // normal
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,               0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,               0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,               0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,               0.0f,  0.0f, -1.0f,
 
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,               0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,               0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,               0.0f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,               0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               0.0f,  0.0f, 1.0f,
 
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
 
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
 
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,               0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,               0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,               0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               0.0f, -1.0f,  0.0f,
 
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,               0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,               0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,               0.0f,  1.0f,  0.0f
 	};
 
 	unsigned int indices[] = {
@@ -301,11 +305,11 @@ int main()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
 		glEnableVertexAttribArray(0);
 
 		// texture coordinate attribute
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, TextureCoord));
 		glEnableVertexAttribArray(1);
 	}
 
@@ -317,8 +321,12 @@ int main()
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
 		glEnableVertexAttribArray(0);
+
+		// normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
+		glEnableVertexAttribArray(1);
 	}
 
 	unsigned int ObjectVAO;
@@ -329,8 +337,12 @@ int main()
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
 		glEnableVertexAttribArray(0);
+
+		// normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
+		glEnableVertexAttribArray(1);
 	}
 
 
@@ -483,11 +495,13 @@ int main()
 // 			}
 // 		}
 
+		glm::vec3 lightPos(1.2f, 1.0f, -2.0f);
+
 		{ // for light
 			LightShader.UseProgram();
 			// don't forget to use the corresponding shader program first (to set the uniform)
 			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
-			LightShader.SetVector("lightColor", 1.0f, 1.0f, 1.0f);
+			LightShader.SetVector("LightColor", 1.0f, 1.0f, 1.0f);
 
 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
@@ -495,9 +509,9 @@ int main()
 			glBindVertexArray(LightVAO);
 
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-			glm::vec3 lightPos(1.2f, 1.0f, -2.0f);
 			ModelMatrix = glm::translate(ModelMatrix, lightPos);
-			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+			ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 
 			LightShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
@@ -508,8 +522,11 @@ int main()
 		{ // for Object
 			ObjectShader.UseProgram();
 			// don't forget to use the corresponding shader program first (to set the uniform)
-			ObjectShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
-			ObjectShader.SetVector("lightColor", 1.0f, 1.0f, 1.0f);
+			ObjectShader.SetVector("ObjectColor", 1.0f, 0.5f, 0.31f);
+			ObjectShader.SetVector("LightColor", 1.0f, 1.0f, 1.0f);
+			ObjectShader.SetVector("LightPos", lightPos.x, lightPos.y, lightPos.z);
+			//ObjectShader.SetFloat("AmbientStrength", sin((float)glfwGetTime()));
+			ObjectShader.SetFloat("AmbientStrength", 0.1f);
 
 			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
@@ -519,7 +536,8 @@ int main()
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
 			glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
 			ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
-			ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+			ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 
 			ObjectShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
