@@ -2,6 +2,9 @@
 #include "Containers/String.h"
 #include "HAL/Platform.h"
 #include "Logging/LogMarcos.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 DECLARE_LOG_CATEGORY_EXTERN(Shader);
 
@@ -33,7 +36,10 @@ public:
 	void SetBool(const FStdString &InUniformName, bool Value);
 	void SetInt(const FStdString& InUniformName, int32 Value);
 	void SetFloat(const FStdString& InUniformName, float Value);
+
 	void SetVector(const FStdString& InUniformName, float InX, float InY, float InZ);
+	void SetVector(const FStdString& InUniformName, const glm::vec3 &InPos);
+
 	void SetMaterix4fv(const FStdString& InUniformName, const float *pValue, int32 InCount = 1, bool bTranspose = false);
 
 

@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -502,11 +503,32 @@ int main()
 
 		glm::vec3 CameraPos = Camera.GetPosition();
 
+		glm::vec3 LightColor;
+		LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+		LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+		LightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+
+		glm::vec3 DiffuseColor = LightColor * glm::vec3(0.5f); // decrease the influence
+		glm::vec3 AmbientColor = DiffuseColor * glm::vec3(0.2f); // low influence
+
 		{ // for light
 			LightShader.UseProgram();
 			// don't forget to use the corresponding shader program first (to set the uniform)
 			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
-			LightShader.SetVector("LightColor", 1.0f, 1.0f, 1.0f);
+			//LightShader.SetVector("light.Ambient", AmbientColor);
+			//LightShader.SetVector("light.Diffuse", DiffuseColor);
+			//LightShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
+			//LightShader.SetVector("light.position", lightPos);
+
+			LightShader.SetVector("LightColor", LightColor);
+
+			//LightShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
+			//LightShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
+			//LightShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
+			//LightShader.SetFloat("material.Shininess", 32.0f);
+			//
+			//LightShader.SetVector("viewPos", Camera.GetPosition());
+
 
 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
@@ -527,17 +549,20 @@ int main()
 		{ // for Object
 			ObjectShader.UseProgram();
 			// don't forget to use the corresponding shader program first (to set the uniform)
-			ObjectShader.SetVector("ObjectColor", 1.0f, 0.5f, 0.31f);
-			ObjectShader.SetVector("LightColor", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetVector("LightPos", lightPos.x, lightPos.y, lightPos.z);
-			ObjectShader.SetVector("ViewPos", CameraPos.x, CameraPos.y, CameraPos.z);
-			//ObjectShader.SetFloat("AmbientStrength", sin((float)glfwGetTime()));
-			ObjectShader.SetFloat("AmbientStrength", 0.1f);
-			ObjectShader.SetFloat("SpecularStrength", 0.5f);
+			ObjectShader.SetVector("ViewPos", CameraPos);
 
-			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+			ObjectShader.SetVector("light.Ambient", AmbientColor);
+			ObjectShader.SetVector("light.Diffuse", DiffuseColor);
+			ObjectShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
+			ObjectShader.SetVector("light.Position", lightPos);
 
-			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
+			ObjectShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
+			ObjectShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
+			ObjectShader.SetFloat("material.Shininess", 32.0f);
+
+			ObjectShader.SetVector("ViewPos", CameraPos);
+
 
 			glBindVertexArray(ObjectVAO);
 
@@ -548,6 +573,8 @@ int main()
 			//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 
 			ObjectShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 36);

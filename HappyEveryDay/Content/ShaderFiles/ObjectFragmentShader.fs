@@ -3,37 +3,47 @@
 in vec3 Normal;  
 in vec3 FragPos;  
 
-
 out vec4 FragColor;
 
 
-uniform float AmbientStrength;
-uniform float SpecularStrength;
+struct Material {
+    vec3 Ambient;
+    vec3 Diffuse;
+    vec3 Specular;    
+    float Shininess;
+}; 
 
-uniform vec3 ObjectColor;
-uniform vec3 LightColor;
-uniform vec3 LightPos;
+struct Light {
+    vec3 Position;
+    vec3 Ambient;
+    vec3 Diffuse;
+    vec3 Specular;
+};
+
 uniform vec3 ViewPos;
 
-uniform mat4 View;
+uniform Material material;
+uniform Light light;
 
 
 void main()
 {
     // cal ambient
-    vec3 Ambint = LightColor*AmbientStrength;
+    vec3 Ambint = light.Ambient*material.Ambient;
 
     // cal diffuse
     vec3 NormalizeNormal = normalize(Normal);
-    vec3 LightDir = normalize(LightPos-FragPos);
+    vec3 LightDir = normalize(light.Position-FragPos);
     float DiffuseFactor = max(dot(NormalizeNormal, LightDir), 0.0);
-    vec3 Diffuse = DiffuseFactor*LightColor;
+    vec3 Diffuse = light.Diffuse*material.Diffuse*DiffuseFactor;
 
     // cal specular
     vec3 ViewDir = normalize(ViewPos - FragPos);
     vec3 LightReflectDir = reflect(-LightDir, NormalizeNormal);
-    float Spec = pow(max(dot(ViewDir, LightReflectDir), 0.0), 32);
-    vec3 Specular = SpecularStrength*Spec*LightColor;
+    float SpecFactor = pow(max(dot(ViewDir, LightReflectDir), 0.0), material.Shininess);
+    vec3 Specular = SpecFactor*light.Specular*material.Specular;
 
-    FragColor = vec4((Ambint+Diffuse+Specular) * ObjectColor, 1.0);
+    vec3 Result = Ambint+Diffuse+Specular;
+    vec3 TestColor = vec3(DiffuseFactor, DiffuseFactor, DiffuseFactor);
+    FragColor = vec4(Result, 1.0);
 }
