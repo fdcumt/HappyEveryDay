@@ -35,6 +35,7 @@ public:
 
 	void AddPositionOffset(const glm::vec3& InPosition);
 	void SetPosition(const glm::vec3& InPosition);
+	glm::vec3 GetPosition() const { return Position; }
 
 	void DoMovement(NS_Message::FMessageInfo *MessageInfoList, float InMouseXDeltaMove, float InMouseYDeltaMove);
 

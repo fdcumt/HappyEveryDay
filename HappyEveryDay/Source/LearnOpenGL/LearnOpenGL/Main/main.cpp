@@ -427,7 +427,7 @@ int main()
 	//glDisable(GL_DEPTH_TEST);
 
 	{ // init camera
-		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 1000.f);
+		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 100.f);
 	}
 
 	// render loop
@@ -495,7 +495,12 @@ int main()
 // 			}
 // 		}
 
-		glm::vec3 lightPos(1.2f, 1.0f, -2.0f);
+		glm::vec3 lightPos(1.2f, 0.0f, 2.0f);
+
+		lightPos.x = 1.0f + sin(glfwGetTime())*2.0f;
+		lightPos.z = 1.0f + sin(glfwGetTime()/2.f);
+
+		glm::vec3 CameraPos = Camera.GetPosition();
 
 		{ // for light
 			LightShader.UseProgram();
@@ -506,16 +511,16 @@ int main()
 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
-			glBindVertexArray(LightVAO);
 
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
 			ModelMatrix = glm::translate(ModelMatrix, lightPos);
 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-			ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+			ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.2f));
 
 			LightShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(LightVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		
@@ -525,19 +530,22 @@ int main()
 			ObjectShader.SetVector("ObjectColor", 1.0f, 0.5f, 0.31f);
 			ObjectShader.SetVector("LightColor", 1.0f, 1.0f, 1.0f);
 			ObjectShader.SetVector("LightPos", lightPos.x, lightPos.y, lightPos.z);
+			ObjectShader.SetVector("ViewPos", CameraPos.x, CameraPos.y, CameraPos.z);
 			//ObjectShader.SetFloat("AmbientStrength", sin((float)glfwGetTime()));
 			ObjectShader.SetFloat("AmbientStrength", 0.1f);
+			ObjectShader.SetFloat("SpecularStrength", 0.5f);
 
 			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+
 			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
-			glBindVertexArray(LightVAO);
+			glBindVertexArray(ObjectVAO);
 
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-			glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
-			ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
+			//glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
+			//ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-			ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+			//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 
 			ObjectShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
