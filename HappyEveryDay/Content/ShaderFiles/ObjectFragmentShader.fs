@@ -2,6 +2,7 @@
 
 in vec3 Normal;  
 in vec3 FragPos;  
+in vec3 LightPosInViewSpace;  
 
 
 out vec4 FragColor;
@@ -25,12 +26,12 @@ void main()
 
     // cal diffuse
     vec3 NormalizeNormal = normalize(Normal);
-    vec3 LightDir = normalize(LightPos-FragPos);
+    vec3 LightDir = normalize(LightPosInViewSpace-FragPos);
     float DiffuseFactor = max(dot(NormalizeNormal, LightDir), 0.0);
     vec3 Diffuse = DiffuseFactor*LightColor;
 
     // cal specular
-    vec3 ViewDir = normalize(ViewPos - FragPos);
+    vec3 ViewDir = normalize(-FragPos);
     vec3 LightReflectDir = reflect(-LightDir, NormalizeNormal);
     float Spec = pow(max(dot(ViewDir, LightReflectDir), 0.0), 32);
     vec3 Specular = SpecularStrength*Spec*LightColor;
