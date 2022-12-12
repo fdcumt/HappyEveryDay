@@ -18,6 +18,7 @@
 #include "Message/MessageBase.h"
 #include "Math/Vector.h"
 #include "Math/Vector2D.h"
+#include "Misc/AssertionMacros.h"
 
 
 DEFINE_LOG_CATEGORY(LearnOpenGL);
@@ -38,10 +39,65 @@ float MouseXDeltaMove = 0.f;
 float MouseYDeltaMove = 0.f;
 
 
+uint32 LoadTexture(const FStdString& InTexturePath)
+{
+	int32 width, height, nrChannels;
+	uint8* pData = FSTBImage::StbiLoad(InTexturePath.data(), &width, &height, &nrChannels, 0);
+	if (pData)
+	{
+		GLenum eFormat;
+		switch (nrChannels)
+		{
+		case 1:
+		{
+			eFormat = GL_RED;
+			break;
+		}
+		case 3:
+		{
+			eFormat = GL_RGB;
+			break;
+		}
+		case 4:
+		{
+			eFormat = GL_RGBA;
+			break;
+		}
+		default:
+		{
+			ErrorLog(LearnOpenGL, "LoadTexture[%s] error, nrChannels[%d].", InTexturePath.data(), nrChannels);
+			FSTBImage::StbiImageFree(pData);
+			return -1;
+		}
+		}
+
+		uint32 TextureID = -1;
+		glGenTextures(1, &TextureID);
+		glBindTexture(GL_TEXTURE_2D, TextureID); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+		glTexImage2D(GL_TEXTURE_2D, 0, eFormat, width, height, 0, eFormat, GL_UNSIGNED_BYTE, pData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		FSTBImage::StbiImageFree(pData);
+
+		return TextureID;
+	}
+	else
+	{
+		ErrorLog(LearnOpenGL, "Load Image[%s] Failed", InTexturePath.data());
+		return -1;
+	}
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
 
 void ProcessKeyEvent(GLFWwindow* window, int key, int action, int mods)
 {
@@ -321,13 +377,19 @@ int main()
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+		int32 AttributeIndex = -1;
+
 		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
-		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
+		glEnableVertexAttribArray(AttributeIndex);
+
+		// texture coordinate attribute
+		glVertexAttribPointer(++AttributeIndex, 2, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, TextureCoord));
+		glEnableVertexAttribArray(AttributeIndex);
 
 		// normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
-		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
+		glEnableVertexAttribArray(AttributeIndex);
 	}
 
 	unsigned int ObjectVAO;
@@ -337,13 +399,19 @@ int main()
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+		int32 AttributeIndex = -1;
+
 		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
-		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
+		glEnableVertexAttribArray(AttributeIndex);
+
+		// texture coordinate attribute
+		glVertexAttribPointer(++AttributeIndex, 2, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, TextureCoord));
+		glEnableVertexAttribArray(AttributeIndex);
 
 		// normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
-		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
+		glEnableVertexAttribArray(AttributeIndex);
 	}
 
 
@@ -353,67 +421,20 @@ int main()
 
 	FSTBImage::SetFlipVerticallyOnLoad(true);
 
-	uint32 TextureID1;
-	{
-		glGenTextures(1, &TextureID1);
-		glBindTexture(GL_TEXTURE_2D, TextureID1); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-		// set the texture wrapping parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// set texture wrapping to GL_REPEAT (default wrapping method)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		// set texture filtering parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	uint32 TextureID1 = LoadTexture(FPaths::GetContentDir() + "Texture/container.jpg");
+	CheckSlow(TextureID1 != -1);
+	
+	uint32 TextureID2 = LoadTexture(FPaths::GetContentDir() + "Texture/awesomeface.png");
+	CheckSlow(TextureID2 != -1);
 
-		{
-			int32 width, height, nrChannels;
-			FStdString ImgFileName = FPaths::GetContentDir() + "Texture/container.jpg";
+	uint32 DiffuseMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2.png");
+	CheckSlow(DiffuseMap != -1);
 
-			uint8* pData = FSTBImage::StbiLoad(ImgFileName.data(), &width, &height, &nrChannels, 0);
-			if (pData)
-			{
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pData);
-				glGenerateMipmap(GL_TEXTURE_2D);
-			}
-			else
-			{
-				ErrorLog(LearnOpenGL, "Load Image[%s] Failed", ImgFileName.data());
-				return -1;
-			}
-
-			FSTBImage::StbiImageFree(pData);
-		}
-	}
-
-	uint32 TextureID2;
-	{
-		glGenTextures(1, &TextureID2);
-		glBindTexture(GL_TEXTURE_2D, TextureID2); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-		// set the texture wrapping parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// set texture wrapping to GL_REPEAT (default wrapping method)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		// set texture filtering parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		{
-			int32 width, height, nrChannels;
-			FStdString ImgFileName = FPaths::GetContentDir() + "Texture/awesomeface.png";
-
-			uint8* pData = FSTBImage::StbiLoad(ImgFileName.data(), &width, &height, &nrChannels, 0);
-			if (pData)
-			{
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData);
-				glGenerateMipmap(GL_TEXTURE_2D);
-			}
-			else
-			{
-				ErrorLog(LearnOpenGL, "Load Image[%s] Failed", ImgFileName.data());
-				return -1;
-			}
-
-			FSTBImage::StbiImageFree(pData);
-		}
-	}
+	uint32 SpecularMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2_specular_colored.png");
+	CheckSlow(SpecularMap != -1);
+ 
+	uint32 EmissionMap = LoadTexture(FPaths::GetContentDir() + "Texture/matrix.jpg");
+	CheckSlow(EmissionMap != -1);
 
 	// draw in wireframe polygons
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -423,6 +444,11 @@ int main()
 	// 将fs材质中uniform sampler2D OurTexture绑定到第0个texture上.
 	Shader.SetInt("Texture1", 0);
 	Shader.SetInt("Texture2", 1);
+
+	ObjectShader.UseProgram();
+	ObjectShader.SetInt("material.Diffuse", 0);
+	ObjectShader.SetInt("material.Specular", 1);
+	ObjectShader.SetInt("material.Emission", 2);
 
 	glEnable(GL_DEPTH_TEST);
 	//glDisable(GL_DEPTH_TEST);
@@ -450,16 +476,16 @@ int main()
 		// 清除color buffer 和 depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// 把TextureID1和第0个texture绑定
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, TextureID1);
-
-		// 把TextureID1和第0个texture绑定
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, TextureID2);
+// 		// 把TextureID1和第0个texture绑定
+// 		glActiveTexture(GL_TEXTURE0);
+// 		glBindTexture(GL_TEXTURE_2D, TextureID1);
+// 
+// 		// 把TextureID1和第0个texture绑定
+// 		glActiveTexture(GL_TEXTURE1);
+// 		glBindTexture(GL_TEXTURE_2D, TextureID2);
 
 		// active shader
-		Shader.UseProgram();
+		//Shader.UseProgram();
 
 		//float timeValue = glfwGetTime();
 		//float greenValue = sin(timeValue);
@@ -476,9 +502,9 @@ int main()
 		//ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 		ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH /(float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
 
-		Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+		//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 		//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
-		Shader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+		//Shader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
 // 		{ // for normal object
 // 			glBindVertexArray(VAO);
@@ -498,21 +524,22 @@ int main()
 
 		glm::vec3 lightPos(1.2f, 0.0f, 2.0f);
 
-		lightPos.x = 1.0f + sin(glfwGetTime())*2.0f;
-		lightPos.z = 1.0f + sin(glfwGetTime()/2.f);
+		lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+		lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
 
 		glm::vec3 CameraPos = Camera.GetPosition();
 
-		glm::vec3 LightColor;
-		LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
-		LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
-		LightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+		glm::vec3 LightColor(0.5f, 0.5f, 0.5f);
+		//LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+		//LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+		//LightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
 
 		glm::vec3 DiffuseColor = LightColor * glm::vec3(0.5f); // decrease the influence
 		glm::vec3 AmbientColor = DiffuseColor * glm::vec3(0.2f); // low influence
 
 		{ // for light
 			LightShader.UseProgram();
+
 			// don't forget to use the corresponding shader program first (to set the uniform)
 			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
 			//LightShader.SetVector("light.Ambient", AmbientColor);
@@ -548,6 +575,21 @@ int main()
 		
 		{ // for Object
 			ObjectShader.UseProgram();
+
+			// bind diffuse map
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, DiffuseMap);
+
+			// bind specular map
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, SpecularMap);
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, EmissionMap);
+			// bind emission map
+			//glActiveTexture(GL_TEXTURE2);
+			//glBindTexture(GL_TEXTURE_2D, EmissionMap);
+
 			// don't forget to use the corresponding shader program first (to set the uniform)
 			ObjectShader.SetVector("ViewPos", CameraPos);
 
@@ -557,14 +599,11 @@ int main()
 			ObjectShader.SetVector("light.Position", lightPos);
 
 			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
-			ObjectShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
-			ObjectShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
+			//ObjectShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
+			//ObjectShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
 			ObjectShader.SetFloat("material.Shininess", 32.0f);
 
 			ObjectShader.SetVector("ViewPos", CameraPos);
-
-
-			glBindVertexArray(ObjectVAO);
 
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
 			//glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
@@ -576,6 +615,8 @@ int main()
 			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
+
+			glBindVertexArray(ObjectVAO);
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}

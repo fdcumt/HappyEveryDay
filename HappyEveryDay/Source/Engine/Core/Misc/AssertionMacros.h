@@ -1,6 +1,14 @@
 #pragma once
 #include <intrin.h>
 
+#define CheckSlow(expr) \
+{ \
+	if(UNLIKELY(!(expr))) \
+	{ \
+		PLATFORM_BREAK(); \
+	} \
+}
+
 #define Checkf(expr, format, ...) CHECK_F_IMPL(expr, format, ##__VA_ARGS__)
 
 #define UNLIKELY(x)			(x)
