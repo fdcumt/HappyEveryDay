@@ -16,7 +16,8 @@ struct Material {
 }; 
 
 struct Light {
-    vec3 Position;
+    //vec3 Position;
+    vec3 Direction;
     vec3 Ambient;
     vec3 Diffuse;
     vec3 Specular;
@@ -35,13 +36,13 @@ void main()
 
     // cal diffuse
     vec3 NormalizeNormal = normalize(Normal);
-    vec3 LightDir = normalize(light.Position-FragPos);
-    float DiffuseFactor = max(dot(NormalizeNormal, LightDir), 0.0);
+    vec3 LightDir = normalize(light.Direction);
+    float DiffuseFactor = max(dot(NormalizeNormal, -LightDir), 0.0);
     vec3 Diffuse = light.Diffuse*DiffuseFactor*texture(material.Diffuse, TextureCoord).rgb;
 
     // cal specular
     vec3 ViewDir = normalize(ViewPos - FragPos);
-    vec3 LightReflectDir = reflect(-LightDir, NormalizeNormal);
+    vec3 LightReflectDir = reflect(LightDir, NormalizeNormal);
     float SpecFactor = pow(max(dot(ViewDir, LightReflectDir), 0.0), material.Shininess);
     vec3 Specular = SpecFactor*light.Specular*texture(material.Specular, TextureCoord).rgb;
 

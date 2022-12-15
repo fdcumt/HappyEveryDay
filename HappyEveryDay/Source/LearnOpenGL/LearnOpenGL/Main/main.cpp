@@ -596,7 +596,8 @@ int main()
 			ObjectShader.SetVector("light.Ambient", AmbientColor);
 			ObjectShader.SetVector("light.Diffuse", DiffuseColor);
 			ObjectShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetVector("light.Position", lightPos);
+			//ObjectShader.SetVector("light.Position", -0.2f, -1.0f, -0.3f);
+			ObjectShader.SetVector("light.Direction", -0.2f, -1.0f, -0.3f);
 
 			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
 			//ObjectShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
@@ -611,14 +612,21 @@ int main()
 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 			//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-			ObjectShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 
 
 			glBindVertexArray(ObjectVAO);
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			for (uint32 i=0; i<10; ++i)
+			{
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, CubePositions[i]);
+				float angle = 20.f*i;
+				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+				ObjectShader.SetMaterix4fv("Model", glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
 		}
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
