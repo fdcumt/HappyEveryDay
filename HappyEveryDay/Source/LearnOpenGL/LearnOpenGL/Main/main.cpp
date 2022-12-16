@@ -179,7 +179,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	{
 		MouseXDeltaMove = MousePosX - xpos;
 		MouseYDeltaMove = MousePosY - ypos;
-		DebugLog(LearnOpenGL, "MouseYDeltaMove:%f", MouseYDeltaMove);
+		//DebugLog(LearnOpenGL, "MouseYDeltaMove:%f", MouseYDeltaMove);
 	}
 	else
 	{
@@ -528,8 +528,6 @@ int main()
 		//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
 		//lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
 
-		glm::vec3 CameraPos = Camera.GetPosition();
-
 		glm::vec3 LightColor(0.5f, 0.5f, 0.5f);
 		//LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
 		//LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
@@ -555,7 +553,7 @@ int main()
 			//LightShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
 			//LightShader.SetFloat("material.Shininess", 32.0f);
 			//
-			//LightShader.SetVector("viewPos", Camera.GetPosition());
+			LightShader.SetVector("viewPos", Camera.GetPosition());
 
 
 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
@@ -592,13 +590,16 @@ int main()
 			//glBindTexture(GL_TEXTURE_2D, EmissionMap);
 
 			// don't forget to use the corresponding shader program first (to set the uniform)
-			ObjectShader.SetVector("ViewPos", CameraPos);
+			ObjectShader.SetVector("ViewPos", Camera.GetPosition());
 
-			ObjectShader.SetVector("light.Ambient", 0.2f, 0.2f, 0.2f);
-			ObjectShader.SetVector("light.Diffuse", 0.5f, 0.5f, 0.5f);
+			ObjectShader.SetVector("light.Ambient", 0.1f, 0.1f, 0.1f);
+			ObjectShader.SetVector("light.Diffuse", 0.8f, 0.8f, 0.8f);
 			ObjectShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetVector("light.Position", lightPos);
-			//ObjectShader.SetVector("light.Direction", -0.2f, -1.0f, -0.3f);
+
+			ObjectShader.SetVector("light.Position", Camera.GetPosition());
+			ObjectShader.SetVector("light.Direction", Camera.GetForward());
+			ObjectShader.SetFloat("light.Cutoff", glm::cos(glm::radians(12.5f)));
+
 			ObjectShader.SetFloat("light.Constant", 1.0f);
 			ObjectShader.SetFloat("light.Linear", 0.09f);
 			ObjectShader.SetFloat("light.Quadratic", 0.032f);
@@ -608,7 +609,6 @@ int main()
 			//ObjectShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
 			ObjectShader.SetFloat("material.Shininess", 32.f);
 
-			ObjectShader.SetVector("ViewPos", CameraPos);
 
 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
 			//glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);

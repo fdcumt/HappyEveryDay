@@ -37,6 +37,8 @@ public:
 	void SetPosition(const glm::vec3& InPosition);
 	glm::vec3 GetPosition() const { return Position; }
 
+	glm::vec3 GetForward() const { return Forward; }
+
 	void DoMovement(NS_Message::FMessageInfo *MessageInfoList, float InMouseXDeltaMove, float InMouseYDeltaMove);
 
 	void RecalculateViewMatrix();
