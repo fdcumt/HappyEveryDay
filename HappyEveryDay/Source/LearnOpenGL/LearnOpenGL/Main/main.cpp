@@ -430,7 +430,8 @@ int main()
 	uint32 DiffuseMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2.png");
 	CheckSlow(DiffuseMap != -1);
 
-	uint32 SpecularMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2_specular_colored.png");
+	//uint32 SpecularMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2_specular_colored.png");
+	uint32 SpecularMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2_specular.png");
 	CheckSlow(SpecularMap != -1);
  
 	uint32 EmissionMap = LoadTexture(FPaths::GetContentDir() + "Texture/matrix.jpg");
@@ -471,8 +472,8 @@ int main()
 		processInput(window);
 
 		// render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
+		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// 清除color buffer 和 depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -522,10 +523,10 @@ int main()
 // 			}
 // 		}
 
-		glm::vec3 lightPos(1.2f, 0.0f, 2.0f);
+		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-		lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-		lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
+		//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+		//lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
 
 		glm::vec3 CameraPos = Camera.GetPosition();
 
@@ -593,16 +594,19 @@ int main()
 			// don't forget to use the corresponding shader program first (to set the uniform)
 			ObjectShader.SetVector("ViewPos", CameraPos);
 
-			ObjectShader.SetVector("light.Ambient", AmbientColor);
-			ObjectShader.SetVector("light.Diffuse", DiffuseColor);
+			ObjectShader.SetVector("light.Ambient", 0.2f, 0.2f, 0.2f);
+			ObjectShader.SetVector("light.Diffuse", 0.5f, 0.5f, 0.5f);
 			ObjectShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
-			//ObjectShader.SetVector("light.Position", -0.2f, -1.0f, -0.3f);
-			ObjectShader.SetVector("light.Direction", -0.2f, -1.0f, -0.3f);
+			ObjectShader.SetVector("light.Position", lightPos);
+			//ObjectShader.SetVector("light.Direction", -0.2f, -1.0f, -0.3f);
+			ObjectShader.SetFloat("light.Constant", 1.0f);
+			ObjectShader.SetFloat("light.Linear", 0.09f);
+			ObjectShader.SetFloat("light.Quadratic", 0.032f);
 
 			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
 			//ObjectShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
 			//ObjectShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
-			ObjectShader.SetFloat("material.Shininess", 32.0f);
+			ObjectShader.SetFloat("material.Shininess", 32.f);
 
 			ObjectShader.SetVector("ViewPos", CameraPos);
 

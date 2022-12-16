@@ -110,7 +110,7 @@ void FCamera::DoMovement(NS_Message::FMessageInfo* MessageInfoList, float InMous
 
 		{ // camera rotation
 			float MoveSpeed = 0.1;
-			Yaw += InMouseXDeltaMove * MoveSpeed;
+			Yaw -= InMouseXDeltaMove * MoveSpeed;
 			Pitch += InMouseYDeltaMove * MoveSpeed;
 
 			if (InMouseXDeltaMove != 0.f || InMouseYDeltaMove != 0.f)
