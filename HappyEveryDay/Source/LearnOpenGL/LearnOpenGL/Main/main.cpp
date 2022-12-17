@@ -599,6 +599,7 @@ int main()
 			ObjectShader.SetVector("light.Position", Camera.GetPosition());
 			ObjectShader.SetVector("light.Direction", Camera.GetForward());
 			ObjectShader.SetFloat("light.Cutoff", glm::cos(glm::radians(12.5f)));
+			ObjectShader.SetFloat("light.OuterCutoff", glm::cos(glm::radians(17.5f)));
 
 			ObjectShader.SetFloat("light.Constant", 1.0f);
 			ObjectShader.SetFloat("light.Linear", 0.09f);

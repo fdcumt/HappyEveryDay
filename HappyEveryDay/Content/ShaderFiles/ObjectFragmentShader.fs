@@ -25,6 +25,7 @@ struct Light {
     vec3 Specular;
 
     float Cutoff; // 切光角
+    float OuterCutoff; // 外切光角
 
     float Constant;
     float Linear;
@@ -41,7 +42,11 @@ void main()
 {
     vec3 DirLight2Frag = normalize(FragPos-light.Position);
 
-    if (dot(DirLight2Frag, normalize(light.Direction))>=light.Cutoff)
+    float CurCosTheta = dot(DirLight2Frag, normalize(light.Direction));
+    float Intensity = clamp((CurCosTheta-light.OuterCutoff)/(light.Cutoff-light.OuterCutoff), 0.0, 1.0);
+
+
+    if (dot(DirLight2Frag, normalize(light.Direction))>=light.OuterCutoff)
     {
         float DisLight2FragPos = length(light.Position-FragPos);
 
@@ -68,7 +73,7 @@ void main()
         //vec3 Emission = texture(material.Emission, TextureCoord).rgb;
 
         //vec3 Result = (Ambint+Diffuse+Specular)*Attenuation+Emission;
-        vec3 Result =Ambint + (Diffuse+Specular)*Attenuation;
+        vec3 Result =Ambint + (Diffuse+Specular)*Attenuation*Intensity;
         //vec3 Result = Ambint+Diffuse+Emission;
         vec3 TestColor = vec3(DiffuseFactor, DiffuseFactor, DiffuseFactor);
         FragColor = vec4(Result, 1.0);
