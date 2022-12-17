@@ -75,6 +75,6 @@ void main()
     }
     else
     {
-        FragColor = vec4(light.Ambient*texture(material.Diffuse, TextureCoord).rgb, 1.0);
+        FragColor = vec4(light.Ambient*texture(material.Diffuse, TextureCoord).rgb*2, 1.0);
     }
 }
