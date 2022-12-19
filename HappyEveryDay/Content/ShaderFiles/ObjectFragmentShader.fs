@@ -6,16 +6,31 @@ in vec2 TextureCoord;
 
 out vec4 FragColor;
 
+#define PointLightNumber 4
 
-struct Material {
-    float Shininess;
+struct FDirectionLight 
+{
+    vec3 Direction;
+
     vec3 Ambient;
-    sampler2D Diffuse;
-    sampler2D Specular;    
-    sampler2D Emission;
-}; 
+    vec3 Diffuse;
+    vec3 Specular;
+};
 
-struct Light {
+struct FPointLight 
+{
+    vec3 Position;
+
+    vec3 Ambient;
+    vec3 Diffuse;
+    vec3 Specular;
+
+    float Constant;
+    float Linear;
+    float Quadratic;
+};
+
+struct FSpotLight {
     vec3 Position;
     vec3 Direction;
     //vec3 Direction;
@@ -32,54 +47,115 @@ struct Light {
     float Quadratic;
 };
 
+struct Material 
+{
+    float Shininess;
+    vec3 Ambient;
+    sampler2D Diffuse;
+    sampler2D Specular;    
+    sampler2D Emission;
+}; 
+
+
 uniform vec3 ViewPos;
+uniform FDirectionLight DirectionLight;
+uniform FPointLight PointLights[PointLightNumber];
+uniform FSpotLight SpotLight;
 
 uniform Material material;
-uniform Light light;
 
+
+vec3 CalcDirectionLight(FDirectionLight InLight, vec3 InNormal, vec3 InViewDir);
+vec3 CalcPointLight(FPointLight InLight, vec3 InNormal, vec3 InViewDir);
+vec3 CalcSpotLight(FSpotLight InLight, vec3 InNormal, vec3 InViewDir);
 
 void main()
 {
-    vec3 DirLight2Frag = normalize(FragPos-light.Position);
+    vec3 Nor = normalize(Normal);
+    vec3 ViewDir = normalize(FragPos-ViewPos);
 
-    float CurCosTheta = dot(DirLight2Frag, normalize(light.Direction));
-    float Intensity = clamp((CurCosTheta-light.OuterCutoff)/(light.Cutoff-light.OuterCutoff), 0.0, 1.0);
+    // calc direction light
+    vec3 Result = CalcDirectionLight(DirectionLight, Nor, ViewDir);
 
-
-    if (dot(DirLight2Frag, normalize(light.Direction))>=light.OuterCutoff)
+    // calc point light
+    for (int i=0; i<PointLightNumber; i++)
     {
-        float DisLight2FragPos = length(light.Position-FragPos);
-
-        // cal attenuation
-        float Attenuation = 1/(light.Constant+light.Linear*DisLight2FragPos+light.Quadratic*DisLight2FragPos*DisLight2FragPos);
-
-        // cal ambient
-        vec3 Ambint = light.Ambient*texture(material.Diffuse, TextureCoord).rgb;
-
-        // cal diffuse
-        vec3 NormalizeNormal = normalize(Normal);
-        //vec3 LightDir = normalize(light.Direction);
-        vec3 LightDir = normalize(light.Position-FragPos);
-        float DiffuseFactor = max(dot(NormalizeNormal, LightDir), 0.0);
-        vec3 Diffuse = light.Diffuse*DiffuseFactor*texture(material.Diffuse, TextureCoord).rgb;
-
-        // cal specular
-        vec3 ViewDir = normalize(ViewPos - FragPos);
-        vec3 LightReflectDir = reflect(-LightDir, NormalizeNormal);
-        float SpecFactor = pow(max(dot(ViewDir, LightReflectDir), 0.0), material.Shininess);
-        vec3 Specular = SpecFactor*light.Specular*texture(material.Specular, TextureCoord).rgb;
-
-        // cal emission
-        //vec3 Emission = texture(material.Emission, TextureCoord).rgb;
-
-        //vec3 Result = (Ambint+Diffuse+Specular)*Attenuation+Emission;
-        vec3 Result =Ambint + (Diffuse+Specular)*Attenuation*Intensity;
-        //vec3 Result = Ambint+Diffuse+Emission;
-        vec3 TestColor = vec3(DiffuseFactor, DiffuseFactor, DiffuseFactor);
-        FragColor = vec4(Result, 1.0);
+       // Result += CalcPointLight(PointLights[i], Nor, ViewDir);
     }
-    else
-    {
-        FragColor = vec4(light.Ambient*texture(material.Diffuse, TextureCoord).rgb*2, 1.0);
-    }
+
+    // calc spot light
+    Result += CalcSpotLight(SpotLight, Nor, ViewDir);
+
+    // calc emission light
+   // Result += texture(material.Emission, TextureCoord).rgb;
+
+    FragColor = vec4(Result, 1.0);
+}
+
+// InViewDir: ViewPos to FragPos
+vec3 CalcDirectionLight(FDirectionLight InLight, vec3 InNormal, vec3 InViewDir)
+{
+    vec3 LightDir = normalize(InLight.Direction);
+
+    // calc ambient
+    vec3 Ambient = InLight.Ambient*texture(material.Diffuse, TextureCoord).rgb;
+
+    // calc diffuse
+    float DiffuseFactor = max(dot(-LightDir, InNormal), 0.0);
+    vec3 Diffuse = DiffuseFactor*InLight.Diffuse*texture(material.Diffuse, TextureCoord).rgb;
+
+    // calc specular
+    vec3 RefectLight = reflect(-LightDir, InNormal);
+    float SpecularFactor = pow(max(dot(RefectLight, -InViewDir), 0.0), material.Shininess);
+    vec3 Specular = SpecularFactor*InLight.Specular*texture(material.Specular, TextureCoord).rgb;
+
+    return Ambient+Diffuse+Specular;
+}
+
+vec3 CalcPointLight(FPointLight InLight, vec3 InNormal, vec3 InViewDir)
+{
+    vec3 LightDir = normalize(FragPos-InLight.Position);
+
+    float Distance = length(FragPos-InLight.Position);
+    float Attenuation = 1/(InLight.Constant+InLight.Linear*Distance+InLight.Quadratic*Distance*Distance);
+
+    // calc ambient
+    vec3 Ambient = InLight.Ambient*texture(material.Diffuse, TextureCoord).rgb;
+
+    // calc diffuse
+    float DiffuseFactor = max(dot(-LightDir, InNormal), 0.0);
+    vec3 Diffuse = DiffuseFactor*InLight.Diffuse*texture(material.Diffuse, TextureCoord).rgb;
+
+    // calc specular
+    vec3 RefectLight = reflect(-LightDir, InNormal);
+    float SpecularFactor = pow(max(dot(RefectLight, -InViewDir), 0.0), material.Shininess);
+    vec3 Specular = SpecularFactor*InLight.Specular*texture(material.Specular, TextureCoord).rgb;
+
+    return (Ambient+Diffuse+Specular)*Attenuation;
+}
+
+vec3 CalcSpotLight(FSpotLight InLight, vec3 InNormal, vec3 InViewDir)
+{
+    vec3 LightDir = normalize(FragPos-InLight.Position);
+
+    float Distance = length(FragPos-InLight.Position);
+
+    float CosTheta = dot(LightDir, normalize(InLight.Direction));
+    float SpotFactor = clamp((CosTheta-InLight.OuterCutoff)/(InLight.Cutoff-InLight.OuterCutoff), 0.0, 1.0);
+
+    float Attenuation = 1/(InLight.Constant+InLight.Linear*Distance+InLight.Quadratic*Distance*Distance);
+
+    // calc ambient
+    vec3 Ambient = InLight.Ambient*texture(material.Diffuse, TextureCoord).rgb;
+
+    // calc diffuse
+    float DiffuseFactor = max(dot(-LightDir, InNormal), 0.0);
+    vec3 Diffuse = DiffuseFactor*InLight.Diffuse*texture(material.Diffuse, TextureCoord).rgb;
+
+    // calc specular
+    vec3 RefectLight = reflect(-LightDir, InNormal);
+    float SpecularFactor = pow(max(dot(RefectLight, -InViewDir), 0.0), material.Shininess);
+    vec3 Specular = SpecularFactor*InLight.Specular*texture(material.Specular, TextureCoord).rgb;
+
+    return (Ambient+Diffuse+Specular)*Attenuation*SpotFactor;
 }
