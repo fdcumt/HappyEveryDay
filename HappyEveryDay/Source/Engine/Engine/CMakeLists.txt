@@ -17,6 +17,7 @@ set(LocalDefineList
 #设置Include目录, Properties->C/C++->General->Additional Include Directories
 set(IncludeDirs
 		"."
+		"${RootDir}/Include"
 		"glm"
 		"Core"
 		"ApplicationCore"

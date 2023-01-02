@@ -15,6 +15,7 @@ set(LibItems
 	"RenderCore"
 	"GeneratedHeaders"
 	"glfw3.lib"
+	"assimp.lib"
 	"glm"
 	"Engine"
 	)
