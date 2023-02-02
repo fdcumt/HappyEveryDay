@@ -19,6 +19,7 @@
 #include "Math/Vector.h"
 #include "Math/Vector2D.h"
 #include "Misc/AssertionMacros.h"
+#include "Model/Model.h"
 
 
 DEFINE_LOG_CATEGORY(LearnOpenGL);
@@ -276,6 +277,12 @@ int main()
 	FStdString ObjectFSFileName = FPaths::GetContentDir() + "/ShaderFiles/ObjectFragmentShader.fs";
 	FShader ObjectShader(ObjectVSFileName, ObjectFSFileName);
 
+
+	// build and compile our shader program
+	FStdString BackpackVSFileName = FPaths::GetContentDir() + "/ShaderFiles/1.model_loading.vs";
+	FStdString BackpackFSFileName = FPaths::GetContentDir() + "/ShaderFiles/1.model_loading.fs";
+	FShader BackpackShader(BackpackVSFileName, BackpackFSFileName);
+	FModel BackpackModel(FPaths::GetContentDir()+"/Models/Backpack/backpack.obj");
 
 	struct FVerticeInfo
 	{
@@ -698,7 +705,25 @@ int main()
 				ObjectShader.SetMaterix4fv("Model", glm::value_ptr(model));
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+
+			{
+				
+				BackpackShader.UseProgram();
+
+
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+				model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+				BackpackShader.SetMaterix4fv("model", glm::value_ptr(model));
+
+				BackpackShader.SetMaterix4fv("view", glm::value_ptr(Camera.GetViewMatrix()));
+				BackpackShader.SetMaterix4fv("projection", glm::value_ptr(ProjectionMatrix));
+
+				BackpackModel.Draw(ObjectShader);
+			}
 		}
+
+
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------

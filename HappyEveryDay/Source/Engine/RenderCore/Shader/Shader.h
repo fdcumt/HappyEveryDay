@@ -33,14 +33,14 @@ public:
 	void UseProgram();
 	void DeleteProgram();
 
-	void SetBool(const FStdString &InUniformName, bool Value);
-	void SetInt(const FStdString& InUniformName, int32 Value);
-	void SetFloat(const FStdString& InUniformName, float Value);
+	void SetBool(const FStdString &InUniformName, bool Value) const;
+	void SetInt(const FStdString& InUniformName, int32 Value) const;
+	void SetFloat(const FStdString& InUniformName, float Value) const;
 
-	void SetVector(const FStdString& InUniformName, float InX, float InY, float InZ);
-	void SetVector(const FStdString& InUniformName, const glm::vec3 &InPos);
+	void SetVector(const FStdString& InUniformName, float InX, float InY, float InZ) const;
+	void SetVector(const FStdString& InUniformName, const glm::vec3 &InPos) const;
 
-	void SetMaterix4fv(const FStdString& InUniformName, const float *pValue, int32 InCount = 1, bool bTranspose = false);
+	void SetMaterix4fv(const FStdString& InUniformName, const float *pValue, int32 InCount = 1, bool bTranspose = false) const;
 
 
 protected:
