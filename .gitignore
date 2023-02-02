@@ -9,3 +9,5 @@ Binaries/
 
 *.sln
 /HappyEveryDay/Source/GeneratedHeaders/CommonGeneratedHeader.h
+
+.idea/
