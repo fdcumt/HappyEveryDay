@@ -189,7 +189,13 @@ function(GenExecutable ExeName CurDir IncludeDirs LibDirs OutputDir NeedLibItems
 
 	#Properties->General->Output Directory
 	set_target_properties("${ExeName}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OutputAbsDir}/${ArchitectureDirName}")
-	
+	#Properties->Debugging->Environment Directory
+	set_target_properties("${ExeName}" PROPERTIES VS_DEBUGGER_ENVIRONMENT "${SlnDLLsDir}")
+
+	#copy dlls
+	file(GLOB DLLS "${SlnDLLsDir}/*.dll")
+	add_custom_command(TARGET "${ExeName}" PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${DLLS} "$(OutDir)")
+
 	#if(bApplication)
 	#	#message("GenExecutable EXE:${ExeName} use /SUBSYSTEM:WINDOWS")
 	#	#ref:https://developercommunity.visualstudio.com/t/cmake-set-subsystem-to-console/46678

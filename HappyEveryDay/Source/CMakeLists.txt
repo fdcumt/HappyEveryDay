@@ -21,12 +21,14 @@ INCLUDE("${CMAKE_SOURCE_DIR}/../CMake/Utility.cmake")
 set(RootDir "${CMAKE_SOURCE_DIR}/..")
 set(SlnAutoGenLibsDir "${CMAKE_BINARY_DIR}/Libs")
 
+
 #file(GLOB GeneratedCommonHeaders ./src/*.h)
 #将相对路径转成绝对路径
 get_filename_component(AbsRootDir ${RootDir} ABSOLUTE)
 MESSAGE(STATUS "AbsRootDir is ${AbsRootDir}")
-configure_file("${RootDir}/GeneratedCommonHeaders/CommonGeneratedHeader.h" "${CMAKE_SOURCE_DIR}/GeneratedHeaders/CommonGeneratedHeader.h")
+configure_file("${AbsRootDir}/GeneratedCommonHeaders/CommonGeneratedHeader.h" "${CMAKE_SOURCE_DIR}/GeneratedHeaders/CommonGeneratedHeader.h")
 
+set(SlnDLLsDir "${AbsRootDir}/DLLs")
 
 #开启项目文件夹
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
