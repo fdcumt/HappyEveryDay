@@ -261,6 +261,13 @@ int main()
 		DebugLog(LearnOpenGL, "MaximumNumber:%d", MaximumNumber);
 	}
 
+	// global opengl state
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 	// build and compile our shader program
 	FStdString VertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/VertexShader.vs";
 	FStdString FragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/FragmentShader.fs";
@@ -284,188 +291,129 @@ int main()
 	FShader BackpackShader(BackpackVSFileName, BackpackFSFileName);
 	FModel BackpackModel(FPaths::GetContentDir()+"/Models/Backpack/backpack.obj");
 
+	FStdString StencilTestVSFileName = FPaths::GetContentDir() + "/ShaderFiles/2.stencil_testing.vs";
+	FStdString StencilTestFSFileName = FPaths::GetContentDir() + "/ShaderFiles/2.stencil_testing.fs";
+	FShader StencilTestShader(StencilTestVSFileName, StencilTestFSFileName);
+
+	FStdString StencilTestSingleFSFileName = FPaths::GetContentDir() + "/ShaderFiles/2.stencil_single_color.fs";
+	FShader StencilTestSingleShader(StencilTestVSFileName, StencilTestSingleFSFileName);
+
 	struct FVerticeInfo
 	{
 		FVector Position;
 		FVector2D TextureCoord;
 		FVector Normal;
 	};
+	float CubeVertices[] = {
+		// positions          // texture Coords
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-	float vertices[] = {
-		// positions          // texture coordinates    // normal
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,               0.0f,  0.0f, -1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,               0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               0.0f,  0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,               0.0f,  0.0f, -1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,               0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,               0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,               0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,               0.0f,  0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,               0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               0.0f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,               0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,               0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,               0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,               0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,               0.0f, -1.0f,  0.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,               0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,               0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,               0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,               0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,               0.0f,  1.0f,  0.0f
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
 
-	unsigned int indices[] = {
-		0, 1, 3, // first triangle
-		1, 2, 3  // second triangle
+
+	float PlaneVertices[] = {
+		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+		 5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+		 5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+		 5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 	};
 
-	// positions all containers
-	glm::vec3 CubePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
+	uint32 CubeVAO, CubeVBO;
+	{ // for cube
+		glGenVertexArrays(1, &CubeVAO);
+		glGenBuffers(1, &CubeVBO);
 
-	// positions of the point lights
-	glm::vec3 PointLightPositions[] = {
-		glm::vec3(0.7f,  0.2f,  2.0f),
-		glm::vec3(2.3f, -3.3f, -4.0f),
-		glm::vec3(-4.0f,  2.0f, -12.0f),
-		glm::vec3(0.0f,  0.0f, -3.0f)
-	};
+		glBindVertexArray(CubeVAO);
 
-	unsigned int VBO, VAO, EBO;
-	{
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-		glGenBuffers(1, &EBO);
+		glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
 
-		glBindVertexArray(VAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
 		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
-		// texture coordinate attribute
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, TextureCoord));
 		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+
+		glBindVertexArray(0);
 	}
 
-	unsigned int LightVAO;
+	uint32 PlaneVAO, PlaneVBO;
 	{
-		glGenVertexArrays(1, &LightVAO);
-		glBindVertexArray(LightVAO);
+		glGenVertexArrays(1, &PlaneVAO);
+		glGenBuffers(1, &PlaneVBO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBindVertexArray(PlaneVAO);
 
-		int32 AttributeIndex = -1;
+		glBindBuffer(GL_ARRAY_BUFFER, PlaneVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(PlaneVertices), PlaneVertices, GL_STATIC_DRAW);
 
-		// position attribute
-		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
-		glEnableVertexAttribArray(AttributeIndex);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
-		// texture coordinate attribute
-		glVertexAttribPointer(++AttributeIndex, 2, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, TextureCoord));
-		glEnableVertexAttribArray(AttributeIndex);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-		// normal attribute
-		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
-		glEnableVertexAttribArray(AttributeIndex);
-	}
-
-	unsigned int ObjectVAO;
-	{
-		glGenVertexArrays(1, &ObjectVAO);
-		glBindVertexArray(ObjectVAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-		int32 AttributeIndex = -1;
-
-		// position attribute
-		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Position));
-		glEnableVertexAttribArray(AttributeIndex);
-
-		// texture coordinate attribute
-		glVertexAttribPointer(++AttributeIndex, 2, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, TextureCoord));
-		glEnableVertexAttribArray(AttributeIndex);
-
-		// normal attribute
-		glVertexAttribPointer(++AttributeIndex, 3, GL_FLOAT, GL_FALSE, sizeof(FVerticeInfo), (void*)OFFSET(FVerticeInfo, Normal));
-		glEnableVertexAttribArray(AttributeIndex);
+		glBindVertexArray(0);
 	}
 
 
-	// safe unbind VBO and VAO
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glBindVertexArray(0);
+	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
+	CheckSlow(CubeTexture != -1);
 
-	FSTBImage::SetFlipVerticallyOnLoad(true);
+	uint32 FloorTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/metal.png");
+	CheckSlow(FloorTexture != -1);
 
-	uint32 TextureID1 = LoadTexture(FPaths::GetContentDir() + "Texture/container.jpg");
-	CheckSlow(TextureID1 != -1);
-	
-	uint32 TextureID2 = LoadTexture(FPaths::GetContentDir() + "Texture/awesomeface.png");
-	CheckSlow(TextureID2 != -1);
+	StencilTestShader.UseProgram();
+	StencilTestShader.SetInt("Texture1", 0);
 
-	uint32 DiffuseMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2.png");
-	CheckSlow(DiffuseMap != -1);
-
-	//uint32 SpecularMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2_specular_colored.png");
-	uint32 SpecularMap = LoadTexture(FPaths::GetContentDir() + "Texture/container2_specular.png");
-	CheckSlow(SpecularMap != -1);
- 
-	uint32 EmissionMap = LoadTexture(FPaths::GetContentDir() + "Texture/matrix.jpg");
-	CheckSlow(EmissionMap != -1);
 
 	// draw in wireframe polygons
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	// 启用该shader
-	Shader.UseProgram();
-	// 将fs材质中uniform sampler2D OurTexture绑定到第0个texture上.
-	Shader.SetInt("Texture1", 0);
-	Shader.SetInt("Texture2", 1);
 
-	ObjectShader.UseProgram();
-	ObjectShader.SetInt("material.Diffuse", 0);
-	ObjectShader.SetInt("material.Specular", 1);
-	ObjectShader.SetInt("material.Emission", 2);
 
 	glEnable(GL_DEPTH_TEST);
 	//glDisable(GL_DEPTH_TEST);
@@ -491,7 +439,7 @@ int main()
 		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// 清除color buffer 和 depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 // 		// 把TextureID1和第0个texture绑定
 // 		glActiveTexture(GL_TEXTURE0);
@@ -512,12 +460,86 @@ int main()
 
 		// 设置变换矩阵
 		//glm::mat4 ViewMatrix = glm::mat4(1.0f);
-		glm::mat4 ProjectionMatrix = glm::mat4(1.0f);
 
 		Camera.RecalculateViewMatrix();
 
 		//ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-		ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH /(float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
+		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH /(float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
+		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
+		glm::mat4 ModelMatrix = glm::mat4(1.0f);
+
+		StencilTestShader.UseProgram();
+		StencilTestShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+		StencilTestShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+		StencilTestShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+
+		StencilTestSingleShader.UseProgram();
+		StencilTestSingleShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+		StencilTestSingleShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+
+		{ // floor
+			StencilTestShader.UseProgram();
+			glStencilMask(0x00);
+			glBindVertexArray(PlaneVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE0, FloorTexture);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glBindVertexArray(0);
+		}
+
+		{ // draw cube and write 1 to stencil buffer for cube
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+
+			StencilTestShader.UseProgram();
+			glStencilMask(0xFF);
+			glBindVertexArray(CubeVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE0, CubeTexture);
+
+			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+			StencilTestShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
+			StencilTestShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			glBindVertexArray(0);
+		}
+
+		{ // cube outline
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
+			//glStencilOp(GL_ZERO, GL_REPLACE, GL_REPLACE);
+
+			glDisable(GL_DEPTH_TEST);
+
+			float Scale = 1.1f;
+			StencilTestSingleShader.UseProgram();
+			glBindVertexArray(CubeVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE0, CubeTexture);
+
+			glm::mat4 CubeModelMatrix = glm::mat4(1.0f);
+			CubeModelMatrix = glm::translate(CubeModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+			CubeModelMatrix = glm::scale(CubeModelMatrix, glm::vec3(Scale, Scale, Scale));
+			StencilTestSingleShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			CubeModelMatrix = glm::mat4(1.0f);
+			CubeModelMatrix = glm::translate(CubeModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
+			CubeModelMatrix = glm::scale(CubeModelMatrix, glm::vec3(Scale, Scale, Scale));
+
+			StencilTestSingleShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			glBindVertexArray(0);
+			glEnable(GL_DEPTH_TEST);
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+
+		}
 
 		//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 		//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
@@ -539,189 +561,189 @@ int main()
 // 			}
 // 		}
 
-		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-
-		//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-		//lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
-
-		glm::vec3 LightColor(0.5f, 0.5f, 0.5f);
-		//LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
-		//LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
-		//LightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
-
-		glm::vec3 DiffuseColor = LightColor * glm::vec3(0.5f); // decrease the influence
-		glm::vec3 AmbientColor = DiffuseColor * glm::vec3(0.2f); // low influence
-
-		{ // for light
-			LightShader.UseProgram();
-
-			// don't forget to use the corresponding shader program first (to set the uniform)
-			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
-			//LightShader.SetVector("light.Ambient", AmbientColor);
-			//LightShader.SetVector("light.Diffuse", DiffuseColor);
-			//LightShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
-			//LightShader.SetVector("light.position", lightPos);
-
-			LightShader.SetVector("LightColor", LightColor);
-
-			//LightShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
-			//LightShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
-			//LightShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
-			//LightShader.SetFloat("material.Shininess", 32.0f);
-			//
-			LightShader.SetVector("viewPos", Camera.GetPosition());
-
-
-			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
-			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-
-
-// 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-// 			ModelMatrix = glm::translate(ModelMatrix, lightPos);
-// 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-// 			ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.2f));
+// 		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 // 
-// 			LightShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
-
-			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-			glBindVertexArray(LightVAO);
-			for (unsigned int i = 0; i < 4; i++)
-			{
-				glm::mat4  model = glm::mat4(1.0f);
-				model = glm::translate(model, PointLightPositions[i]);
-				model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-				LightShader.SetMaterix4fv("Model", glm::value_ptr(model));
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-		}
-		
-		{ // for Object
-			ObjectShader.UseProgram();
-
-			// bind diffuse map
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, DiffuseMap);
-
-			// bind specular map
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, SpecularMap);
-
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, EmissionMap);
-			// bind emission map
-			//glActiveTexture(GL_TEXTURE2);
-			//glBindTexture(GL_TEXTURE_2D, EmissionMap);
-
-			// don't forget to use the corresponding shader program first (to set the uniform)
-			ObjectShader.SetVector("ViewPos", Camera.GetPosition());
-
-			// directional light
-			ObjectShader.SetVector("DirectionLight.Direction", -0.2f, -1.0f, -0.3f);
-			ObjectShader.SetVector("DirectionLight.Ambient", 0.05f, 0.05f, 0.05f);
-			ObjectShader.SetVector("DirectionLight.Diffuse", 0.4f, 0.4f, 0.4f);
-			ObjectShader.SetVector("DirectionLight.Specular", 0.5f, 0.5f, 0.5f);
-
-			// point light 1
-			ObjectShader.SetVector("PointLights[0].Position", PointLightPositions[0]);
-			ObjectShader.SetVector("PointLights[0].Ambient", 0.05f, 0.05f, 0.05f);
-			ObjectShader.SetVector("PointLights[0].Diffuse", 0.8f, 0.8f, 0.8f);
-			ObjectShader.SetVector("PointLights[0].Specular", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetFloat("PointLights[0].Constant", 1.0f);
-			ObjectShader.SetFloat("PointLights[0].Linear", 0.09f);
-			ObjectShader.SetFloat("PointLights[0].Quadratic", 0.032f);
-
-			// point light 2
-			ObjectShader.SetVector("PointLights[1].Position", PointLightPositions[1]);
-			ObjectShader.SetVector("PointLights[1].Ambient", 0.05f, 0.05f, 0.05f);
-			ObjectShader.SetVector("PointLights[1].Diffuse", 0.8f, 0.8f, 0.8f);
-			ObjectShader.SetVector("PointLights[1].Specular", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetFloat("PointLights[1].Constant", 1.0f);
-			ObjectShader.SetFloat("PointLights[1].Linear", 0.09f);
-			ObjectShader.SetFloat("PointLights[1].Quadratic", 0.032f);
-			// point light 3
-			ObjectShader.SetVector("PointLights[2].Position", PointLightPositions[2]);
-			ObjectShader.SetVector("PointLights[2].Ambient", 0.05f, 0.05f, 0.05f);
-			ObjectShader.SetVector("PointLights[2].Diffuse", 0.8f, 0.8f, 0.8f);
-			ObjectShader.SetVector("PointLights[2].Specular", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetFloat("PointLights[2].Constant", 1.0f);
-			ObjectShader.SetFloat("PointLights[2].Linear", 0.09f);
-			ObjectShader.SetFloat("PointLights[2].Quadratic", 0.032f);
-			// point light 4
-			ObjectShader.SetVector("PointLights[3].Position", PointLightPositions[3]);
-			ObjectShader.SetVector("PointLights[3].Ambient", 0.05f, 0.05f, 0.05f);
-			ObjectShader.SetVector("PointLights[3].Diffuse", 0.8f, 0.8f, 0.8f);
-			ObjectShader.SetVector("PointLights[3].Specular", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetFloat("PointLights[3].Constant", 1.0f);
-			ObjectShader.SetFloat("PointLights[3].Linear", 0.09f);
-			ObjectShader.SetFloat("PointLights[3].Quadratic", 0.032f);
-			 
-			// SpotLight
-			ObjectShader.SetVector("SpotLight.Position", Camera.GetPosition());
-			ObjectShader.SetVector("SpotLight.Direction", Camera.GetForward());
-
-			ObjectShader.SetVector("SpotLight.Ambient", 0.0f, 0.0f, 0.0f);
-			ObjectShader.SetVector("SpotLight.Diffuse", 1.0f, 1.0f, 1.0f);
-			ObjectShader.SetVector("SpotLight.Specular", 1.0f, 1.0f, 1.0f);
-
-			ObjectShader.SetFloat("SpotLight.Constant", 1.0f);
-			ObjectShader.SetFloat("SpotLight.Linear", 0.09f);
-			ObjectShader.SetFloat("SpotLight.Quadratic", 0.032f);
-
-			ObjectShader.SetFloat("SpotLight.Cutoff", glm::cos(glm::radians(12.5f)));
-			ObjectShader.SetFloat("SpotLight.OuterCutoff", glm::cos(glm::radians(15.0f)));
-
-			ObjectShader.SetVector("light.Position", Camera.GetPosition());
-			ObjectShader.SetVector("light.Direction", Camera.GetForward());
-			ObjectShader.SetFloat("light.Cutoff", glm::cos(glm::radians(12.5f)));
-			ObjectShader.SetFloat("light.OuterCutoff", glm::cos(glm::radians(17.5f)));
-
-			ObjectShader.SetFloat("light.Constant", 1.0f);
-			ObjectShader.SetFloat("light.Linear", 0.09f);
-			ObjectShader.SetFloat("light.Quadratic", 0.032f);
-
-			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
-			ObjectShader.SetFloat("material.Shininess", 32.f);
-
-
-			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-			//glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
-			//ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
-			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-			//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-
-			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
-			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-
-
-			glBindVertexArray(ObjectVAO);
-			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			for (uint32 i=0; i<10; ++i)
-			{
-				glm::mat4 model = glm::mat4(1.0f);
-				model = glm::translate(model, CubePositions[i]);
-				float angle = 20.f*i;
-				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-				ObjectShader.SetMaterix4fv("Model", glm::value_ptr(model));
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-			{
-				
-				BackpackShader.UseProgram();
-
-
-				glm::mat4 model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-				model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-				BackpackShader.SetMaterix4fv("model", glm::value_ptr(model));
-
-				BackpackShader.SetMaterix4fv("view", glm::value_ptr(Camera.GetViewMatrix()));
-				BackpackShader.SetMaterix4fv("projection", glm::value_ptr(ProjectionMatrix));
-
-				BackpackModel.Draw(ObjectShader);
-			}
-		}
+// 		//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+// 		//lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
+// 
+// 		glm::vec3 LightColor(0.5f, 0.5f, 0.5f);
+// 		//LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+// 		//LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+// 		//LightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+// 
+// 		glm::vec3 DiffuseColor = LightColor * glm::vec3(0.5f); // decrease the influence
+// 		glm::vec3 AmbientColor = DiffuseColor * glm::vec3(0.2f); // low influence
+// 
+// 		{ // for light
+// 			LightShader.UseProgram();
+// 
+// 			// don't forget to use the corresponding shader program first (to set the uniform)
+// 			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
+// 			//LightShader.SetVector("light.Ambient", AmbientColor);
+// 			//LightShader.SetVector("light.Diffuse", DiffuseColor);
+// 			//LightShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
+// 			//LightShader.SetVector("light.position", lightPos);
+// 
+// 			LightShader.SetVector("LightColor", LightColor);
+// 
+// 			//LightShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
+// 			//LightShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
+// 			//LightShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
+// 			//LightShader.SetFloat("material.Shininess", 32.0f);
+// 			//
+// 			LightShader.SetVector("viewPos", Camera.GetPosition());
+// 
+// 
+// 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+// 			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+// 
+// 
+// // 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
+// // 			ModelMatrix = glm::translate(ModelMatrix, lightPos);
+// // 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+// // 			ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.2f));
+// // 
+// // 			LightShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+// 
+// 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+// 
+// 			glBindVertexArray(LightVAO);
+// 			for (unsigned int i = 0; i < 4; i++)
+// 			{
+// 				glm::mat4  model = glm::mat4(1.0f);
+// 				model = glm::translate(model, PointLightPositions[i]);
+// 				model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+// 				LightShader.SetMaterix4fv("Model", glm::value_ptr(model));
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 		}
+// 		
+// 		{ // for Object
+// 			ObjectShader.UseProgram();
+// 
+// 			// bind diffuse map
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE_2D, DiffuseMap);
+// 
+// 			// bind specular map
+// 			glActiveTexture(GL_TEXTURE1);
+// 			glBindTexture(GL_TEXTURE_2D, SpecularMap);
+// 
+// 			glActiveTexture(GL_TEXTURE2);
+// 			glBindTexture(GL_TEXTURE_2D, EmissionMap);
+// 			// bind emission map
+// 			//glActiveTexture(GL_TEXTURE2);
+// 			//glBindTexture(GL_TEXTURE_2D, EmissionMap);
+// 
+// 			// don't forget to use the corresponding shader program first (to set the uniform)
+// 			ObjectShader.SetVector("ViewPos", Camera.GetPosition());
+// 
+// 			// directional light
+// 			ObjectShader.SetVector("DirectionLight.Direction", -0.2f, -1.0f, -0.3f);
+// 			ObjectShader.SetVector("DirectionLight.Ambient", 0.05f, 0.05f, 0.05f);
+// 			ObjectShader.SetVector("DirectionLight.Diffuse", 0.4f, 0.4f, 0.4f);
+// 			ObjectShader.SetVector("DirectionLight.Specular", 0.5f, 0.5f, 0.5f);
+// 
+// 			// point light 1
+// 			ObjectShader.SetVector("PointLights[0].Position", PointLightPositions[0]);
+// 			ObjectShader.SetVector("PointLights[0].Ambient", 0.05f, 0.05f, 0.05f);
+// 			ObjectShader.SetVector("PointLights[0].Diffuse", 0.8f, 0.8f, 0.8f);
+// 			ObjectShader.SetVector("PointLights[0].Specular", 1.0f, 1.0f, 1.0f);
+// 			ObjectShader.SetFloat("PointLights[0].Constant", 1.0f);
+// 			ObjectShader.SetFloat("PointLights[0].Linear", 0.09f);
+// 			ObjectShader.SetFloat("PointLights[0].Quadratic", 0.032f);
+// 
+// 			// point light 2
+// 			ObjectShader.SetVector("PointLights[1].Position", PointLightPositions[1]);
+// 			ObjectShader.SetVector("PointLights[1].Ambient", 0.05f, 0.05f, 0.05f);
+// 			ObjectShader.SetVector("PointLights[1].Diffuse", 0.8f, 0.8f, 0.8f);
+// 			ObjectShader.SetVector("PointLights[1].Specular", 1.0f, 1.0f, 1.0f);
+// 			ObjectShader.SetFloat("PointLights[1].Constant", 1.0f);
+// 			ObjectShader.SetFloat("PointLights[1].Linear", 0.09f);
+// 			ObjectShader.SetFloat("PointLights[1].Quadratic", 0.032f);
+// 			// point light 3
+// 			ObjectShader.SetVector("PointLights[2].Position", PointLightPositions[2]);
+// 			ObjectShader.SetVector("PointLights[2].Ambient", 0.05f, 0.05f, 0.05f);
+// 			ObjectShader.SetVector("PointLights[2].Diffuse", 0.8f, 0.8f, 0.8f);
+// 			ObjectShader.SetVector("PointLights[2].Specular", 1.0f, 1.0f, 1.0f);
+// 			ObjectShader.SetFloat("PointLights[2].Constant", 1.0f);
+// 			ObjectShader.SetFloat("PointLights[2].Linear", 0.09f);
+// 			ObjectShader.SetFloat("PointLights[2].Quadratic", 0.032f);
+// 			// point light 4
+// 			ObjectShader.SetVector("PointLights[3].Position", PointLightPositions[3]);
+// 			ObjectShader.SetVector("PointLights[3].Ambient", 0.05f, 0.05f, 0.05f);
+// 			ObjectShader.SetVector("PointLights[3].Diffuse", 0.8f, 0.8f, 0.8f);
+// 			ObjectShader.SetVector("PointLights[3].Specular", 1.0f, 1.0f, 1.0f);
+// 			ObjectShader.SetFloat("PointLights[3].Constant", 1.0f);
+// 			ObjectShader.SetFloat("PointLights[3].Linear", 0.09f);
+// 			ObjectShader.SetFloat("PointLights[3].Quadratic", 0.032f);
+// 			 
+// 			// SpotLight
+// 			ObjectShader.SetVector("SpotLight.Position", Camera.GetPosition());
+// 			ObjectShader.SetVector("SpotLight.Direction", Camera.GetForward());
+// 
+// 			ObjectShader.SetVector("SpotLight.Ambient", 0.0f, 0.0f, 0.0f);
+// 			ObjectShader.SetVector("SpotLight.Diffuse", 1.0f, 1.0f, 1.0f);
+// 			ObjectShader.SetVector("SpotLight.Specular", 1.0f, 1.0f, 1.0f);
+// 
+// 			ObjectShader.SetFloat("SpotLight.Constant", 1.0f);
+// 			ObjectShader.SetFloat("SpotLight.Linear", 0.09f);
+// 			ObjectShader.SetFloat("SpotLight.Quadratic", 0.032f);
+// 
+// 			ObjectShader.SetFloat("SpotLight.Cutoff", glm::cos(glm::radians(12.5f)));
+// 			ObjectShader.SetFloat("SpotLight.OuterCutoff", glm::cos(glm::radians(15.0f)));
+// 
+// 			ObjectShader.SetVector("light.Position", Camera.GetPosition());
+// 			ObjectShader.SetVector("light.Direction", Camera.GetForward());
+// 			ObjectShader.SetFloat("light.Cutoff", glm::cos(glm::radians(12.5f)));
+// 			ObjectShader.SetFloat("light.OuterCutoff", glm::cos(glm::radians(17.5f)));
+// 
+// 			ObjectShader.SetFloat("light.Constant", 1.0f);
+// 			ObjectShader.SetFloat("light.Linear", 0.09f);
+// 			ObjectShader.SetFloat("light.Quadratic", 0.032f);
+// 
+// 			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
+// 			ObjectShader.SetFloat("material.Shininess", 32.f);
+// 
+// 
+// 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
+// 			//glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
+// 			//ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
+// 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+// 			//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
+// 
+// 			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
+// 			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+// 
+// 
+// 			glBindVertexArray(ObjectVAO);
+// 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+// 			for (uint32 i=0; i<10; ++i)
+// 			{
+// 				glm::mat4 model = glm::mat4(1.0f);
+// 				model = glm::translate(model, CubePositions[i]);
+// 				float angle = 20.f*i;
+// 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+// 				ObjectShader.SetMaterix4fv("Model", glm::value_ptr(model));
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 
+// 			{
+// 				
+// 				BackpackShader.UseProgram();
+// 
+// 
+// 				glm::mat4 model = glm::mat4(1.0f);
+// 				model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+// 				model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+// 				BackpackShader.SetMaterix4fv("model", glm::value_ptr(model));
+// 
+// 				BackpackShader.SetMaterix4fv("view", glm::value_ptr(Camera.GetViewMatrix()));
+// 				BackpackShader.SetMaterix4fv("projection", glm::value_ptr(ProjectionMatrix));
+// 
+// 				BackpackModel.Draw(ObjectShader);
+// 			}
+// 		}
 
 
 
@@ -731,12 +753,12 @@ int main()
 		glfwPollEvents();
 	}
 
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteVertexArrays(1, &LightVAO);
-	glDeleteVertexArrays(1, &ObjectVAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
-	Shader.DeleteProgram();
+// 	glDeleteVertexArrays(1, &VAO);
+// 	glDeleteVertexArrays(1, &LightVAO);
+// 	glDeleteVertexArrays(1, &ObjectVAO);
+// 	glDeleteBuffers(1, &VBO);
+// 	glDeleteBuffers(1, &EBO);
+	//Shader.DeleteProgram();
 
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
