@@ -78,13 +78,14 @@ uint32 LoadTexture(const FStdString& InTexturePath)
 		glTexImage2D(GL_TEXTURE_2D, 0, eFormat, width, height, 0, eFormat, GL_UNSIGNED_BYTE, pData);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, eFormat == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, eFormat == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		FSTBImage::StbiImageFree(pData);
 
+		
 		return TextureID;
 	}
 	else
@@ -263,40 +264,9 @@ int main()
 
 	// global opengl state
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-	// build and compile our shader program
-	FStdString VertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/VertexShader.vs";
-	FStdString FragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/FragmentShader.fs";
-	FShader Shader(VertexShaderFileName, FragmentShaderFileName);
+	FShader BlendingShader(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.fs");
 
-
-	// build and compile our shader program
-	FStdString LightVertexShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/LightVertexShader.vs";
-	FStdString LightFragmentShaderFileName = FPaths::GetContentDir() + "/ShaderFiles/LightFragmentShader.fs";
-	FShader LightShader(LightVertexShaderFileName, LightFragmentShaderFileName);
-
-	// build and compile our shader program
-	FStdString ObjectVSFileName= FPaths::GetContentDir() + "/ShaderFiles/ObjectVertexShader.vs";
-	FStdString ObjectFSFileName = FPaths::GetContentDir() + "/ShaderFiles/ObjectFragmentShader.fs";
-	FShader ObjectShader(ObjectVSFileName, ObjectFSFileName);
-
-
-	// build and compile our shader program
-	FStdString BackpackVSFileName = FPaths::GetContentDir() + "/ShaderFiles/1.model_loading.vs";
-	FStdString BackpackFSFileName = FPaths::GetContentDir() + "/ShaderFiles/1.model_loading.fs";
-	FShader BackpackShader(BackpackVSFileName, BackpackFSFileName);
-	FModel BackpackModel(FPaths::GetContentDir()+"/Models/Backpack/backpack.obj");
-
-	FStdString StencilTestVSFileName = FPaths::GetContentDir() + "/ShaderFiles/2.stencil_testing.vs";
-	FStdString StencilTestFSFileName = FPaths::GetContentDir() + "/ShaderFiles/2.stencil_testing.fs";
-	FShader StencilTestShader(StencilTestVSFileName, StencilTestFSFileName);
-
-	FStdString StencilTestSingleFSFileName = FPaths::GetContentDir() + "/ShaderFiles/2.stencil_single_color.fs";
-	FShader StencilTestSingleShader(StencilTestVSFileName, StencilTestSingleFSFileName);
 
 	struct FVerticeInfo
 	{
@@ -361,6 +331,17 @@ int main()
 		 5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 	};
 
+	float TransparentVertices[] = {
+		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+	};
+
 	uint32 CubeVAO, CubeVBO;
 	{ // for cube
 		glGenVertexArrays(1, &CubeVAO);
@@ -399,24 +380,42 @@ int main()
 		glBindVertexArray(0);
 	}
 
+	uint32 TransparentVAO, TransparentVBO;
+	{
+		glGenVertexArrays(1, &TransparentVAO);
+		glGenBuffers(1, &TransparentVBO);
 
-	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
-	CheckSlow(CubeTexture != -1);
+		glBindVertexArray(TransparentVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, TransparentVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(TransparentVertices), TransparentVertices, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+		glBindVertexArray(0);
+	}
+
 
 	uint32 FloorTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/metal.png");
 	CheckSlow(FloorTexture != -1);
 
-	StencilTestShader.UseProgram();
-	StencilTestShader.SetInt("Texture1", 0);
+	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
+	CheckSlow(CubeTexture != -1);
+
+// 	uint32 TransparentTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/window.png");
+// 	CheckSlow(TransparentTexture != -1);
+
+	BlendingShader.UseProgram();
+	BlendingShader.SetInt("Texture1", 0);
 
 
 	// draw in wireframe polygons
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-
-
-	glEnable(GL_DEPTH_TEST);
-	//glDisable(GL_DEPTH_TEST);
 
 	{ // init camera
 		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 100.f);
@@ -439,7 +438,7 @@ int main()
 		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// 清除color buffer 和 depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 // 		// 把TextureID1和第0个texture绑定
 // 		glActiveTexture(GL_TEXTURE0);
@@ -468,18 +467,13 @@ int main()
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
 
-		StencilTestShader.UseProgram();
-		StencilTestShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-		StencilTestShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
-		StencilTestShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
-
-		StencilTestSingleShader.UseProgram();
-		StencilTestSingleShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-		StencilTestSingleShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+		BlendingShader.UseProgram();
+		BlendingShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+		BlendingShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+		BlendingShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
 		{ // floor
-			StencilTestShader.UseProgram();
-			glStencilMask(0x00);
+			BlendingShader.UseProgram();
 			glBindVertexArray(PlaneVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE0, FloorTexture);
@@ -487,59 +481,23 @@ int main()
 			glBindVertexArray(0);
 		}
 
-		{ // draw cube and write 1 to stencil buffer for cube
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glStencilMask(0xFF);
-
-			StencilTestShader.UseProgram();
-			glStencilMask(0xFF);
-			glBindVertexArray(CubeVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE0, CubeTexture);
-
-			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-			StencilTestShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
-			StencilTestShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			glBindVertexArray(0);
-		}
-
-		{ // cube outline
-			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-			glStencilMask(0x00);
-			//glStencilOp(GL_ZERO, GL_REPLACE, GL_REPLACE);
-
-			glDisable(GL_DEPTH_TEST);
-
-			float Scale = 1.1f;
-			StencilTestSingleShader.UseProgram();
-			glBindVertexArray(CubeVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE0, CubeTexture);
-
-			glm::mat4 CubeModelMatrix = glm::mat4(1.0f);
-			CubeModelMatrix = glm::translate(CubeModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-			CubeModelMatrix = glm::scale(CubeModelMatrix, glm::vec3(Scale, Scale, Scale));
-			StencilTestSingleShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			CubeModelMatrix = glm::mat4(1.0f);
-			CubeModelMatrix = glm::translate(CubeModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
-			CubeModelMatrix = glm::scale(CubeModelMatrix, glm::vec3(Scale, Scale, Scale));
-
-			StencilTestSingleShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			glBindVertexArray(0);
-			glEnable(GL_DEPTH_TEST);
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glStencilMask(0xFF);
-
-		}
+// 		{ // draw cube and write 1 to stencil buffer for cube
+// 			BlendingShader.UseProgram();
+// 			glBindVertexArray(CubeVAO);
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE0, CubeTexture);
+// 
+// 			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+// 			glDrawArrays(GL_TRIANGLES, 0, 36);
+// 
+// 			PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
+// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+// 			glDrawArrays(GL_TRIANGLES, 0, 36);
+// 
+// 			glBindVertexArray(0);
+// 		}
+		
 
 		//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 		//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
@@ -747,6 +705,7 @@ int main()
 
 
 
+
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
@@ -760,6 +719,10 @@ int main()
 // 	glDeleteBuffers(1, &EBO);
 	//Shader.DeleteProgram();
 
+	glDeleteVertexArrays(1, &CubeVAO);
+	glDeleteVertexArrays(1, &PlaneVAO);
+	glDeleteBuffers(1, &CubeVBO);
+	glDeleteBuffers(1, &PlaneVBO);
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
