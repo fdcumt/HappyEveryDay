@@ -264,10 +264,12 @@ int main()
 
 	// global opengl state
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	FShader BlendingShader(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.fs");
 
-
+	 
 	struct FVerticeInfo
 	{
 		FVector Position;
@@ -403,11 +405,13 @@ int main()
 	uint32 FloorTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/metal.png");
 	CheckSlow(FloorTexture != -1);
 
+
+
+	uint32 TransparentTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/window.png");
+	CheckSlow(TransparentTexture != -1);
+
 	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
 	CheckSlow(CubeTexture != -1);
-
-// 	uint32 TransparentTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/window.png");
-// 	CheckSlow(TransparentTexture != -1);
 
 	BlendingShader.UseProgram();
 	BlendingShader.SetInt("Texture1", 0);
@@ -440,26 +444,6 @@ int main()
 		// 清除color buffer 和 depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-// 		// 把TextureID1和第0个texture绑定
-// 		glActiveTexture(GL_TEXTURE0);
-// 		glBindTexture(GL_TEXTURE_2D, TextureID1);
-// 
-// 		// 把TextureID1和第0个texture绑定
-// 		glActiveTexture(GL_TEXTURE1);
-// 		glBindTexture(GL_TEXTURE_2D, TextureID2);
-
-		// active shader
-		//Shader.UseProgram();
-
-		//float timeValue = glfwGetTime();
-		//float greenValue = sin(timeValue);
-		//
-		//int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
-		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-
-		// 设置变换矩阵
-		//glm::mat4 ViewMatrix = glm::mat4(1.0f);
-
 		Camera.RecalculateViewMatrix();
 
 		//ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
@@ -473,7 +457,7 @@ int main()
 		BlendingShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
 		{ // floor
-			BlendingShader.UseProgram();
+			//BlendingShader.UseProgram();
 			glBindVertexArray(PlaneVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE0, FloorTexture);
@@ -481,22 +465,22 @@ int main()
 			glBindVertexArray(0);
 		}
 
-// 		{ // draw cube and write 1 to stencil buffer for cube
-// 			BlendingShader.UseProgram();
-// 			glBindVertexArray(CubeVAO);
-// 			glActiveTexture(GL_TEXTURE0);
-// 			glBindTexture(GL_TEXTURE0, CubeTexture);
-// 
-// 			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
-// 			glDrawArrays(GL_TRIANGLES, 0, 36);
-// 
-// 			PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
-// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
-// 			glDrawArrays(GL_TRIANGLES, 0, 36);
-// 
-// 			glBindVertexArray(0);
-// 		}
+		{ // draw cube and write 1 to stencil buffer for cube
+			//BlendingShader.UseProgram();
+			glBindVertexArray(CubeVAO);
+			//glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE0, CubeTexture);
+
+			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
+			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			glBindVertexArray(0);
+		}
 		
 
 		//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
