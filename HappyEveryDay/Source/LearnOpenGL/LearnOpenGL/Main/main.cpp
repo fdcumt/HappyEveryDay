@@ -85,7 +85,7 @@ uint32 LoadTexture(const FStdString& InTexturePath)
 
 		FSTBImage::StbiImageFree(pData);
 
-		
+
 		return TextureID;
 	}
 	else
@@ -170,7 +170,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	ProcessKeyEvent(window, button, action, mods);
 }
 
-void cb_key(GLFWwindow* win, int key, int code, int action, int mods) 
+void cb_key(GLFWwindow* win, int key, int code, int action, int mods)
 {
 	ProcessKeyEvent(win, key, action, mods);
 }
@@ -194,7 +194,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	
+
 }
 
 void cursor_enter_callback(GLFWwindow* window, int entered)
@@ -213,7 +213,7 @@ void cursor_enter_callback(GLFWwindow* window, int entered)
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const char *VertexShaderSource = nullptr;
+const char* VertexShaderSource = nullptr;
 const char* FragmentShaderSource = nullptr;
 
 int main()
@@ -268,8 +268,9 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	FShader BlendingShader(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.fs");
+	FShader BlendingShader1(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending1.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending1.fs");
 
-	 
+
 	struct FVerticeInfo
 	{
 		FVector Position;
@@ -358,7 +359,7 @@ int main()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 		glBindVertexArray(0);
 	}
@@ -405,16 +406,19 @@ int main()
 	uint32 FloorTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/metal.png");
 	CheckSlow(FloorTexture != -1);
 
-
+	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
+	CheckSlow(CubeTexture != -1);
 
 	uint32 TransparentTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/window.png");
 	CheckSlow(TransparentTexture != -1);
 
-	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
-	CheckSlow(CubeTexture != -1);
+
 
 	BlendingShader.UseProgram();
 	BlendingShader.SetInt("Texture1", 0);
+
+	BlendingShader1.UseProgram();
+	BlendingShader.SetInt("Texture2", 0);
 
 
 	// draw in wireframe polygons
@@ -447,7 +451,7 @@ int main()
 		Camera.RecalculateViewMatrix();
 
 		//ViewMatrix = glm::translate(ViewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH /(float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
+		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH / (float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
 
@@ -456,32 +460,37 @@ int main()
 		BlendingShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
 		BlendingShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
 
+		BlendingShader1.UseProgram();
+		BlendingShader1.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+		BlendingShader1.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+		BlendingShader1.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+
 		{ // floor
-			//BlendingShader.UseProgram();
+			BlendingShader.UseProgram();
 			glBindVertexArray(PlaneVAO);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE0, FloorTexture);
+			glBindTexture(GL_TEXTURE_2D, FloorTexture);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 			glBindVertexArray(0);
 		}
 
 		{ // draw cube and write 1 to stencil buffer for cube
-			//BlendingShader.UseProgram();
+			BlendingShader1.UseProgram();
 			glBindVertexArray(CubeVAO);
-			//glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE0, CubeTexture);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, CubeTexture);
 
 			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+			BlendingShader1.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 
 			PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
-			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+			BlendingShader1.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 
 			glBindVertexArray(0);
 		}
-		
+
 
 		//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 		//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
@@ -696,12 +705,12 @@ int main()
 		glfwPollEvents();
 	}
 
-// 	glDeleteVertexArrays(1, &VAO);
-// 	glDeleteVertexArrays(1, &LightVAO);
-// 	glDeleteVertexArrays(1, &ObjectVAO);
-// 	glDeleteBuffers(1, &VBO);
-// 	glDeleteBuffers(1, &EBO);
-	//Shader.DeleteProgram();
+	// 	glDeleteVertexArrays(1, &VAO);
+	// 	glDeleteVertexArrays(1, &LightVAO);
+	// 	glDeleteVertexArrays(1, &ObjectVAO);
+	// 	glDeleteBuffers(1, &VBO);
+	// 	glDeleteBuffers(1, &EBO);
+		//Shader.DeleteProgram();
 
 	glDeleteVertexArrays(1, &CubeVAO);
 	glDeleteVertexArrays(1, &PlaneVAO);
