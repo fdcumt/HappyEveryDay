@@ -520,6 +520,7 @@ int main()
 		}
 
 		{ // draw transparent windows
+			glDepthMask(GL_FALSE); // 关闭深度写入
 			BlendingShader.UseProgram();
 			glBindVertexArray(TransparentVAO);
 			glActiveTexture(GL_TEXTURE0);
@@ -534,6 +535,8 @@ int main()
 			}
 
 			glBindVertexArray(0);
+			glDepthMask(GL_TRUE); // 开启深度写入
+
 		}
 
 
