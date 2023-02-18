@@ -277,6 +277,7 @@ int main()
 	//glFrontFace(GL_CCW);
 
 	FShader BlendingShader(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.fs");
+	FShader ScreenShader(FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.vs", FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.fs");
 
 	float CubeVertices[] = {
 			// back face
@@ -345,8 +346,20 @@ int main()
 		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
 	};
 
-	uint32 CubeVAO, CubeVBO;
+	float QuadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+		1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+	uint32 CubeVAO;
 	{ // for cube
+		uint32 CubeVBO;
 		glGenVertexArrays(1, &CubeVAO);
 		glGenBuffers(1, &CubeVBO);
 
@@ -364,8 +377,9 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	uint32 PlaneVAO, PlaneVBO;
+	uint32 PlaneVAO;
 	{
+		uint32 PlaneVBO;
 		glGenVertexArrays(1, &PlaneVAO);
 		glGenBuffers(1, &PlaneVBO);
 
@@ -383,8 +397,9 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	uint32 TransparentVAO, TransparentVBO;
+	uint32 TransparentVAO;
 	{
+		uint32 TransparentVBO;
 		glGenVertexArrays(1, &TransparentVAO);
 		glGenBuffers(1, &TransparentVBO);
 
@@ -401,6 +416,54 @@ int main()
 
 		glBindVertexArray(0);
 	}
+
+	uint32 ScreenQuadVAO, ScreenQuadVBO;
+	{
+		glGenVertexArrays(1, &ScreenQuadVAO);
+		glGenBuffers(1, &ScreenQuadVBO);
+
+		glBindVertexArray(ScreenQuadVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, ScreenQuadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(QuadVertices), QuadVertices, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+		glBindVertexArray(0);
+	}
+
+
+	uint32 FrameBufferObject, TextureColorBufferObject, RenderBufferObject;
+	{
+		glGenFramebuffers(1, &FrameBufferObject);
+		glBindFramebuffer(GL_FRAMEBUFFER, FrameBufferObject);
+
+		// texture
+		glGenTextures(1, &TextureColorBufferObject);
+		glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, TextureColorBufferObject, 0);
+
+		// rbo
+		glGenRenderbuffers(1, &RenderBufferObject);
+		glBindRenderbuffer(GL_RENDERBUFFER, RenderBufferObject);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RenderBufferObject);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			ErrorLog(LearnOpenGL, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
 
 
 	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
@@ -448,11 +511,16 @@ int main()
 		// -----
 		processInput(window);
 
+
+		glBindFramebuffer(GL_FRAMEBUFFER, FrameBufferObject);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE); 
+
 		// render
 		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// 清除color buffer 和 depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// 		// 把TextureID1和第0个texture绑定
 		// 		glActiveTexture(GL_TEXTURE0);
@@ -542,6 +610,23 @@ int main()
 
 		}
 
+		{ // draw frame buffer
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+			glDepthMask(GL_FALSE); // 关闭深度写入
+
+
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			ScreenShader.UseProgram();
+			glBindVertexArray(ScreenQuadVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);	// use the color attachment texture as the texture of the quad plane
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glBindVertexArray(0);
+		}
 
 				//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 				//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
