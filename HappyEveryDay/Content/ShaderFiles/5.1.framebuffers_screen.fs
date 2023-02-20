@@ -36,9 +36,34 @@ void main()
         -1, -1, -1
     );
 
+    // 模糊效果
+    float Blur[9] = float[](
+        1, 2, 1,
+        2, 4, 2,
+        1, 2, 1
+    );
+
+    
+    for(int i=0; i<9; i++)
+    {
+        Blur[i] = Blur[i]/16.f;
+    }
+
+
+    float EdgeDetection[9] = float[](
+        1, 1, 1,
+        1, -8, 1,
+        1, 1, 1
+    );
+
+    for(int i=0; i<9; i++)
+    {
+        EdgeDetection[i] = EdgeDetection[i]*5;
+    }
+
     for (int i=0; i<9; i++)
     {
-        Col += SampleTex[i] * Kernel[i];
+        Col += SampleTex[i] * EdgeDetection[i];
     }
 
     FragColor = vec4(Col, 1.0);
