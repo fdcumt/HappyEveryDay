@@ -94,6 +94,37 @@ uint32 LoadTexture(const FStdString& InTexturePath)
 	}
 }
 
+uint32 LoadCubeMap(const vector<FStdString> &InPaths)
+{
+	uint32 TextureID;
+	glGenTextures(1, &TextureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, TextureID);
+
+	int32 Width, Height, nrChannels;
+	for (int32 i=0; i<InPaths.size(); ++i)
+	{
+		uint8 *pData = FSTBImage::StbiLoad(InPaths[i].c_str(), &Width, &Height, &nrChannels, 0);
+		if (pData)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, pData);
+			FSTBImage::StbiImageFree(pData);
+		}
+		else
+		{
+			ErrorLog(LearnOpenGL, "Load LoadCubeMap Index[%i] Path[%s] Failed", i, InPaths[i].c_str());
+			return -1;
+		}
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return TextureID;
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -279,6 +310,10 @@ int main()
 	FShader BlendingShader(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.fs");
 	FShader ScreenShader(FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.vs", FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.fs");
 
+
+	FShader CubeMapShader(FPaths::GetContentDir() + "/ShaderFiles/6.1.cubemaps.vs", FPaths::GetContentDir() + "/ShaderFiles/6.1.cubemaps.fs");
+	FShader SkyboxShader(FPaths::GetContentDir() + "/ShaderFiles/6.1.skybox.vs", FPaths::GetContentDir() + "/ShaderFiles/6.1.skybox.fs");
+
 	float CubeVertices[] = {
 			// back face
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
@@ -355,6 +390,52 @@ int main()
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		1.0f, -1.0f,  1.0f, 0.0f,
 		1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+
+	float SkyBoxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
 	};
 
 	uint32 CubeVAO;
@@ -436,6 +517,22 @@ int main()
 		glBindVertexArray(0);
 	}
 
+	uint32 SkyBoxVAO;
+	{
+		uint32 SkyBoxVBO;
+		glGenVertexArrays(1, &SkyBoxVAO);
+		glGenBuffers(1, &SkyBoxVBO);
+
+		glBindVertexArray(SkyBoxVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, SkyBoxVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(SkyBoxVertices), SkyBoxVertices, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+		glBindVertexArray(0);
+	}
 
 	uint32 FrameBufferObject, TextureColorBufferObject, RenderBufferObject;
 	{
@@ -476,8 +573,23 @@ int main()
 	CheckSlow(TransparentTexture != -1);
 
 
+	vector<FStdString> CubeMapTextures = 
+	{
+		FPaths::GetContentDir() + "/Texture/SkyBox/right.jpg",
+		FPaths::GetContentDir() + "/Texture/SkyBox/left.jpg",
+		FPaths::GetContentDir() + "/Texture/SkyBox/top.jpg",
+		FPaths::GetContentDir() + "/Texture/SkyBox/bottom.jpg",
+		FPaths::GetContentDir() + "/Texture/SkyBox/front.jpg",
+		FPaths::GetContentDir() + "/Texture/SkyBox/back.jpg"
+	};
+	uint32 CubeMapTextureID = LoadCubeMap(CubeMapTextures);
+
+
 	BlendingShader.UseProgram();
 	BlendingShader.SetInt("Texture1", 0);
+
+	SkyboxShader.UseProgram();
+	SkyboxShader.SetInt("Skybox", 0);
 
 	// transparent window locations
 	// --------------------------------
@@ -590,6 +702,21 @@ int main()
 			glBindVertexArray(0);
 		}
 
+		{ // draw sky box
+			glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+			SkyboxShader.UseProgram();
+			SkyboxShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+			SkyboxShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+
+			glBindVertexArray(SkyBoxVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMapTextureID);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			glBindVertexArray(0);
+			glDepthFunc(GL_LESS); // set depth function back to default
+		}
+
 		{ // draw transparent windows
 			glDepthMask(GL_FALSE); // 关闭深度写入
 			BlendingShader.UseProgram();
@@ -610,6 +737,9 @@ int main()
 
 		}
 
+
+
+
 		{ // draw frame buffer
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -626,7 +756,12 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			glBindVertexArray(0);
+			glEnable(GL_DEPTH_TEST); 
+			glDepthMask(GL_TRUE); 
 		}
+
+
+
 
 				//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 				//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));

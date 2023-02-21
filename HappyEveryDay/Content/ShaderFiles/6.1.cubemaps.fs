@@ -30,7 +30,6 @@ void main()
 
     vec3 Col = vec3(0.f);
 
-    // 锐化效果
     float Kernel[9] = float[](
         -1, -1, -1,
         -1,  9, -1,
@@ -44,12 +43,13 @@ void main()
         1, 2, 1
     );
 
+    
     for(int i=0; i<9; i++)
     {
         Blur[i] = Blur[i]/16.f;
     }
 
-    // 边缘检测效果
+
     float EdgeDetection[9] = float[](
         1, 1, 1,
         1, -8, 1,
