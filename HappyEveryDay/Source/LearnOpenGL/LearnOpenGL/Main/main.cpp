@@ -610,10 +610,18 @@ int main()
 		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 100.f);
 	}
 
+	//glEnable(GL_SCISSOR_TEST);
+
 	// render loop
 	// -----------
+	//int32 SissorW=1, SissorH = 1;
 	while (!glfwWindowShouldClose(window))
 	{
+		//SissorW = SissorW < 800 ? SissorW + 1 : 800;
+		//SissorH = SissorH < 800 ? SissorH + 1 : 800;
+		//glScissor(0, 0, SissorW, SissorH);
+		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
 		// update logic
 		Camera.DoMovement(NS_Message::MessageInfoList, MouseXDeltaMove, MouseYDeltaMove);
 		MouseXDeltaMove = 0.f;
@@ -667,6 +675,8 @@ int main()
 		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH / (float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
+
+		
 
 		BlendingShader.UseProgram();
 		BlendingShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
@@ -737,9 +747,7 @@ int main()
 
 		}
 
-
-
-
+		glViewport(0, 0, SCR_WIDTH/2, SCR_HEIGHT/2);
 		{ // draw frame buffer
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -760,8 +768,26 @@ int main()
 			glDepthMask(GL_TRUE); 
 		}
 
+		glViewport(SCR_WIDTH / 2, SCR_HEIGHT / 2, SCR_WIDTH/2, SCR_HEIGHT / 2);
+		{ // draw frame buffer
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+			glDepthMask(GL_FALSE); // 关闭深度写入
 
 
+			//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+			//glClear(GL_COLOR_BUFFER_BIT);
+
+			ScreenShader.UseProgram();
+			glBindVertexArray(ScreenQuadVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);	// use the color attachment texture as the texture of the quad plane
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glBindVertexArray(0);
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask(GL_TRUE);
+		}
 
 				//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
 				//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
