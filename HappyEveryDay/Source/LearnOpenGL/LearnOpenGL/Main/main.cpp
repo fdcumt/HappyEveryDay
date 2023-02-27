@@ -618,8 +618,13 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-		SissorW = SissorW < SCR_WIDTH/2 ? SissorW + 1 : SCR_WIDTH / 2;
-		SissorH = SissorH < SCR_HEIGHT / 2 ? SissorH + 1 : SCR_HEIGHT / 2;
+		SissorW = SissorW < SCR_WIDTH/2 ? SissorW + 1 : SCR_WIDTH;
+		SissorH = SissorH < SCR_HEIGHT / 2 ? SissorH + 1 : SCR_HEIGHT;
+		if (SissorW >= SCR_WIDTH && SissorH >= SCR_HEIGHT)
+		{
+			SissorW = 0;
+			SissorH = 0;
+		}
 
 		glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
@@ -748,17 +753,19 @@ int main()
 
 		}
 
+		// 将framebuffer设置为默认渲染buffer, 设置SissorTest为整个屏幕. 清一遍默认buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT); 
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		glViewport(0, 0, SCR_WIDTH/2, SCR_HEIGHT/2);
 		{ // draw frame buffer
-			glScissor(0, 0, SissorW, SissorH);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glScissor(0, 0, SissorW, SissorH);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 			glDepthMask(GL_FALSE); // 关闭深度写入
-
-
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-			glClear(GL_COLOR_BUFFER_BIT);
 
 			ScreenShader.UseProgram();
 			glBindVertexArray(ScreenQuadVAO);
@@ -775,15 +782,11 @@ int main()
 		{ // draw frame buffer
 
 			//glScissor(0, 0, SissorW, SissorH);
-			glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 			glDepthMask(GL_FALSE); // 关闭深度写入
-
-
-			//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-			//glClear(GL_COLOR_BUFFER_BIT);
 
 			ScreenShader.UseProgram();
 			glBindVertexArray(ScreenQuadVAO);
@@ -796,214 +799,8 @@ int main()
 			glDepthMask(GL_TRUE);
 		}
 
-				//Shader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
-				//Shader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
-				//Shader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-
-		// 		{ // for normal object
-		// 			glBindVertexArray(VAO);
-		// 
-		// 			for (const glm::vec3& ItemPosition : CubePositions)
-		// 			{
-		// 				glm::mat4 ModelMatrix = glm::mat4(1.0f);
-		// 				ModelMatrix = glm::translate(ModelMatrix, ItemPosition);
-		// 				ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-		// 
-		// 				Shader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
-		// 
-		// 				//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		// 				glDrawArrays(GL_TRIANGLES, 0, 36);
-		// 			}
-		// 		}
-
-		// 		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-		// 
-		// 		//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-		// 		//lightPos.z = 1.0f + sin(glfwGetTime() / 2.f);
-		// 
-		// 		glm::vec3 LightColor(0.5f, 0.5f, 0.5f);
-		// 		//LightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
-		// 		//LightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
-		// 		//LightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
-		// 
-		// 		glm::vec3 DiffuseColor = LightColor * glm::vec3(0.5f); // decrease the influence
-		// 		glm::vec3 AmbientColor = DiffuseColor * glm::vec3(0.2f); // low influence
-		// 
-		// 		{ // for light
-		// 			LightShader.UseProgram();
-		// 
-		// 			// don't forget to use the corresponding shader program first (to set the uniform)
-		// 			//LightShader.SetVector("objectColor", 1.0f, 0.5f, 0.31f);
-		// 			//LightShader.SetVector("light.Ambient", AmbientColor);
-		// 			//LightShader.SetVector("light.Diffuse", DiffuseColor);
-		// 			//LightShader.SetVector("light.Specular", 1.0f, 1.0f, 1.0f);
-		// 			//LightShader.SetVector("light.position", lightPos);
-		// 
-		// 			LightShader.SetVector("LightColor", LightColor);
-		// 
-		// 			//LightShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
-		// 			//LightShader.SetVector("material.Diffuse", 1.0f, 0.5f, 0.31f);
-		// 			//LightShader.SetVector("material.Specular", 0.5f, 0.5f, 0.5f);
-		// 			//LightShader.SetFloat("material.Shininess", 32.0f);
-		// 			//
-		// 			LightShader.SetVector("viewPos", Camera.GetPosition());
-		// 
-		// 
-		// 			LightShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
-		// 			LightShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-		// 
-		// 
-		// // 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-		// // 			ModelMatrix = glm::translate(ModelMatrix, lightPos);
-		// // 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-		// // 			ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.2f));
-		// // 
-		// // 			LightShader.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
-		// 
-		// 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		// 
-		// 			glBindVertexArray(LightVAO);
-		// 			for (unsigned int i = 0; i < 4; i++)
-		// 			{
-		// 				glm::mat4  model = glm::mat4(1.0f);
-		// 				model = glm::translate(model, PointLightPositions[i]);
-		// 				model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-		// 				LightShader.SetMaterix4fv("Model", glm::value_ptr(model));
-		// 				glDrawArrays(GL_TRIANGLES, 0, 36);
-		// 			}
-		// 		}
-		// 		
-		// 		{ // for Object
-		// 			ObjectShader.UseProgram();
-		// 
-		// 			// bind diffuse map
-		// 			glActiveTexture(GL_TEXTURE0);
-		// 			glBindTexture(GL_TEXTURE_2D, DiffuseMap);
-		// 
-		// 			// bind specular map
-		// 			glActiveTexture(GL_TEXTURE1);
-		// 			glBindTexture(GL_TEXTURE_2D, SpecularMap);
-		// 
-		// 			glActiveTexture(GL_TEXTURE2);
-		// 			glBindTexture(GL_TEXTURE_2D, EmissionMap);
-		// 			// bind emission map
-		// 			//glActiveTexture(GL_TEXTURE2);
-		// 			//glBindTexture(GL_TEXTURE_2D, EmissionMap);
-		// 
-		// 			// don't forget to use the corresponding shader program first (to set the uniform)
-		// 			ObjectShader.SetVector("ViewPos", Camera.GetPosition());
-		// 
-		// 			// directional light
-		// 			ObjectShader.SetVector("DirectionLight.Direction", -0.2f, -1.0f, -0.3f);
-		// 			ObjectShader.SetVector("DirectionLight.Ambient", 0.05f, 0.05f, 0.05f);
-		// 			ObjectShader.SetVector("DirectionLight.Diffuse", 0.4f, 0.4f, 0.4f);
-		// 			ObjectShader.SetVector("DirectionLight.Specular", 0.5f, 0.5f, 0.5f);
-		// 
-		// 			// point light 1
-		// 			ObjectShader.SetVector("PointLights[0].Position", PointLightPositions[0]);
-		// 			ObjectShader.SetVector("PointLights[0].Ambient", 0.05f, 0.05f, 0.05f);
-		// 			ObjectShader.SetVector("PointLights[0].Diffuse", 0.8f, 0.8f, 0.8f);
-		// 			ObjectShader.SetVector("PointLights[0].Specular", 1.0f, 1.0f, 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[0].Constant", 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[0].Linear", 0.09f);
-		// 			ObjectShader.SetFloat("PointLights[0].Quadratic", 0.032f);
-		// 
-		// 			// point light 2
-		// 			ObjectShader.SetVector("PointLights[1].Position", PointLightPositions[1]);
-		// 			ObjectShader.SetVector("PointLights[1].Ambient", 0.05f, 0.05f, 0.05f);
-		// 			ObjectShader.SetVector("PointLights[1].Diffuse", 0.8f, 0.8f, 0.8f);
-		// 			ObjectShader.SetVector("PointLights[1].Specular", 1.0f, 1.0f, 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[1].Constant", 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[1].Linear", 0.09f);
-		// 			ObjectShader.SetFloat("PointLights[1].Quadratic", 0.032f);
-		// 			// point light 3
-		// 			ObjectShader.SetVector("PointLights[2].Position", PointLightPositions[2]);
-		// 			ObjectShader.SetVector("PointLights[2].Ambient", 0.05f, 0.05f, 0.05f);
-		// 			ObjectShader.SetVector("PointLights[2].Diffuse", 0.8f, 0.8f, 0.8f);
-		// 			ObjectShader.SetVector("PointLights[2].Specular", 1.0f, 1.0f, 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[2].Constant", 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[2].Linear", 0.09f);
-		// 			ObjectShader.SetFloat("PointLights[2].Quadratic", 0.032f);
-		// 			// point light 4
-		// 			ObjectShader.SetVector("PointLights[3].Position", PointLightPositions[3]);
-		// 			ObjectShader.SetVector("PointLights[3].Ambient", 0.05f, 0.05f, 0.05f);
-		// 			ObjectShader.SetVector("PointLights[3].Diffuse", 0.8f, 0.8f, 0.8f);
-		// 			ObjectShader.SetVector("PointLights[3].Specular", 1.0f, 1.0f, 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[3].Constant", 1.0f);
-		// 			ObjectShader.SetFloat("PointLights[3].Linear", 0.09f);
-		// 			ObjectShader.SetFloat("PointLights[3].Quadratic", 0.032f);
-		// 			 
-		// 			// SpotLight
-		// 			ObjectShader.SetVector("SpotLight.Position", Camera.GetPosition());
-		// 			ObjectShader.SetVector("SpotLight.Direction", Camera.GetForward());
-		// 
-		// 			ObjectShader.SetVector("SpotLight.Ambient", 0.0f, 0.0f, 0.0f);
-		// 			ObjectShader.SetVector("SpotLight.Diffuse", 1.0f, 1.0f, 1.0f);
-		// 			ObjectShader.SetVector("SpotLight.Specular", 1.0f, 1.0f, 1.0f);
-		// 
-		// 			ObjectShader.SetFloat("SpotLight.Constant", 1.0f);
-		// 			ObjectShader.SetFloat("SpotLight.Linear", 0.09f);
-		// 			ObjectShader.SetFloat("SpotLight.Quadratic", 0.032f);
-		// 
-		// 			ObjectShader.SetFloat("SpotLight.Cutoff", glm::cos(glm::radians(12.5f)));
-		// 			ObjectShader.SetFloat("SpotLight.OuterCutoff", glm::cos(glm::radians(15.0f)));
-		// 
-		// 			ObjectShader.SetVector("light.Position", Camera.GetPosition());
-		// 			ObjectShader.SetVector("light.Direction", Camera.GetForward());
-		// 			ObjectShader.SetFloat("light.Cutoff", glm::cos(glm::radians(12.5f)));
-		// 			ObjectShader.SetFloat("light.OuterCutoff", glm::cos(glm::radians(17.5f)));
-		// 
-		// 			ObjectShader.SetFloat("light.Constant", 1.0f);
-		// 			ObjectShader.SetFloat("light.Linear", 0.09f);
-		// 			ObjectShader.SetFloat("light.Quadratic", 0.032f);
-		// 
-		// 			ObjectShader.SetVector("material.Ambient", 1.0f, 0.5f, 0.31f);
-		// 			ObjectShader.SetFloat("material.Shininess", 32.f);
-		// 
-		// 
-		// 			glm::mat4 ModelMatrix = glm::mat4(1.0f);
-		// 			//glm::vec3 ObjectPos(1.2f, 1.0f, -7.0f);
-		// 			//ModelMatrix = glm::translate(ModelMatrix, ObjectPos);
-		// 			//ModelMatrix = glm::rotate(ModelMatrix, (float)glfwGetTime() * glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-		// 			//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(50.f), glm::vec3(0.5f, 1.0f, 0.0f));
-		// 
-		// 			ObjectShader.SetMaterix4fv("View", glm::value_ptr(Camera.GetViewMatrix()));
-		// 			ObjectShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-		// 
-		// 
-		// 			glBindVertexArray(ObjectVAO);
-		// 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		// 			for (uint32 i=0; i<10; ++i)
-		// 			{
-		// 				glm::mat4 model = glm::mat4(1.0f);
-		// 				model = glm::translate(model, CubePositions[i]);
-		// 				float angle = 20.f*i;
-		// 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		// 				ObjectShader.SetMaterix4fv("Model", glm::value_ptr(model));
-		// 				glDrawArrays(GL_TRIANGLES, 0, 36);
-		// 			}
-		// 
-		// 			{
-		// 				
-		// 				BackpackShader.UseProgram();
-		// 
-		// 
-		// 				glm::mat4 model = glm::mat4(1.0f);
-		// 				model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		// 				model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-		// 				BackpackShader.SetMaterix4fv("model", glm::value_ptr(model));
-		// 
-		// 				BackpackShader.SetMaterix4fv("view", glm::value_ptr(Camera.GetViewMatrix()));
-		// 				BackpackShader.SetMaterix4fv("projection", glm::value_ptr(ProjectionMatrix));
-		// 
-		// 				BackpackModel.Draw(ObjectShader);
-		// 			}
-		// 		}
-
-
-
-				// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-				// -------------------------------------------------------------------------------
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
