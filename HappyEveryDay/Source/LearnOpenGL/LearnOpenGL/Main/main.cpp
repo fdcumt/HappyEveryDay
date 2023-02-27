@@ -610,17 +610,18 @@ int main()
 		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 100.f);
 	}
 
-	//glEnable(GL_SCISSOR_TEST);
+	glEnable(GL_SCISSOR_TEST);
 
 	// render loop
 	// -----------
-	//int32 SissorW=1, SissorH = 1;
+	int32 SissorW=1, SissorH = 1;
 	while (!glfwWindowShouldClose(window))
 	{
-		//SissorW = SissorW < 800 ? SissorW + 1 : 800;
-		//SissorH = SissorH < 800 ? SissorH + 1 : 800;
-		//glScissor(0, 0, SissorW, SissorH);
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+		SissorW = SissorW < SCR_WIDTH/2 ? SissorW + 1 : SCR_WIDTH / 2;
+		SissorH = SissorH < SCR_HEIGHT / 2 ? SissorH + 1 : SCR_HEIGHT / 2;
+
+		glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
 		// update logic
 		Camera.DoMovement(NS_Message::MessageInfoList, MouseXDeltaMove, MouseYDeltaMove);
@@ -749,6 +750,8 @@ int main()
 
 		glViewport(0, 0, SCR_WIDTH/2, SCR_HEIGHT/2);
 		{ // draw frame buffer
+			glScissor(0, 0, SissorW, SissorH);
+
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 			glDepthMask(GL_FALSE); // 关闭深度写入
@@ -770,6 +773,10 @@ int main()
 
 		glViewport(SCR_WIDTH / 2, SCR_HEIGHT / 2, SCR_WIDTH/2, SCR_HEIGHT / 2);
 		{ // draw frame buffer
+
+			//glScissor(0, 0, SissorW, SissorH);
+			glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
+
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 			glDepthMask(GL_FALSE); // 关闭深度写入
