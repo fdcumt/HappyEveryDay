@@ -309,10 +309,16 @@ int main()
 
 	FShader BlendingShader(FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.vs", FPaths::GetContentDir() + "/ShaderFiles/3.2.blending.fs");
 	FShader ScreenShader(FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.vs", FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.fs");
+	FShader EmptyScreenShader(FPaths::GetContentDir() + "/ShaderFiles/5.1.framebuffers_screen.vs", FPaths::GetContentDir() + "/ShaderFiles/EmptyScreen.fs");
 
 
 	FShader CubeMapShader(FPaths::GetContentDir() + "/ShaderFiles/6.1.cubemaps.vs", FPaths::GetContentDir() + "/ShaderFiles/6.1.cubemaps.fs");
 	FShader SkyboxShader(FPaths::GetContentDir() + "/ShaderFiles/6.1.skybox.vs", FPaths::GetContentDir() + "/ShaderFiles/6.1.skybox.fs");
+
+	FShader ShaderRed(FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.advanced_glsl.vs", FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.red.fs");
+	FShader ShaderGreen(FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.advanced_glsl.vs", FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.green.fs");
+	FShader ShaderBlue(FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.advanced_glsl.vs", FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.blue.fs");
+	FShader ShaderYellow(FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.advanced_glsl.vs", FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.yellow.fs");
 
 	float CubeVertices[] = {
 			// back face
@@ -561,6 +567,31 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	{
+		// get shader uniform block index
+		uint32 UBIRed = glGetUniformBlockIndex(ShaderRed.GetID(), "Matrices");
+		uint32 UBIBlue = glGetUniformBlockIndex(ShaderBlue.GetID(), "Matrices");
+		uint32 UBIYellow = glGetUniformBlockIndex(ShaderYellow.GetID(), "Matrices");
+		uint32 UBIGreen = glGetUniformBlockIndex(ShaderGreen.GetID(), "Matrices");
+		
+		// link shader uniform block to binding points index
+		glUniformBlockBinding(ShaderRed.GetID(), UBIRed, 0);
+		glUniformBlockBinding(ShaderGreen.GetID(), UBIGreen, 0);
+		glUniformBlockBinding(ShaderBlue.GetID(), UBIBlue, 0);
+		glUniformBlockBinding(ShaderYellow.GetID(), UBIYellow, 0);
+	}
+
+	uint32 UBOMatrices;
+	{
+		glGenBuffers(1, &UBOMatrices);
+		glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
+		glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		
+		// bind buffer range to binding points index
+		glBindBufferRange(GL_UNIFORM_BUFFER, 0, UBOMatrices, 0, 2*sizeof(glm::mat4));
+	}
+
 
 
 	uint32 CubeTexture = LoadTexture(FPaths::GetContentDir() + "/Texture/marble.jpg");
@@ -610,23 +641,23 @@ int main()
 		Camera.Init(glm::vec3(0.f, 0.f, 3.f), 0.f, 0.f, 45.f, 0.1f, 100.f);
 	}
 
-	glEnable(GL_SCISSOR_TEST);
+	//glEnable(GL_SCISSOR_TEST);
 
 	// render loop
 	// -----------
-	int32 SissorW=1, SissorH = 1;
+	//int32 SissorW=1, SissorH = 1;
 	while (!glfwWindowShouldClose(window))
 	{
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-		SissorW = SissorW < SCR_WIDTH/2 ? SissorW + 1 : SCR_WIDTH;
-		SissorH = SissorH < SCR_HEIGHT / 2 ? SissorH + 1 : SCR_HEIGHT;
-		if (SissorW >= SCR_WIDTH && SissorH >= SCR_HEIGHT)
-		{
-			SissorW = 0;
-			SissorH = 0;
-		}
-
-		glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+		//SissorW = SissorW < SCR_WIDTH/2 ? SissorW + 1 : SCR_WIDTH;
+		//SissorH = SissorH < SCR_HEIGHT / 2 ? SissorH + 1 : SCR_HEIGHT;
+		//if (SissorW >= SCR_WIDTH && SissorH >= SCR_HEIGHT)
+		//{
+		//	SissorW = 0;
+		//	SissorH = 0;
+		//}
+		//
+		//glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
 		// update logic
 		Camera.DoMovement(NS_Message::MessageInfoList, MouseXDeltaMove, MouseYDeltaMove);
@@ -681,6 +712,47 @@ int main()
 		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(Camera.GetFov()), (float)SCR_WIDTH / (float)SCR_HEIGHT, Camera.GetNearPlane(), Camera.GetFarPlane());
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
+
+		{ // update Uniform buffer data
+			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ProjectionMatrix));
+			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ViewMatrix));
+			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
+		}
+
+		{ // draw color cube
+			glm::mat4 Model = glm::mat4(1.0f);
+			glBindVertexArray(CubeVAO);
+
+			{
+				ShaderBlue.UseProgram();
+				glm::mat4 TempModel = glm::translate(Model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			{
+				ShaderRed.UseProgram();
+				glm::mat4 TempModel = glm::translate(Model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-left
+				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			{
+				ShaderYellow.UseProgram();
+				glm::mat4 TempModel = glm::translate(Model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move top-left
+				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			{
+				ShaderGreen.UseProgram();
+				glm::mat4 TempModel = glm::translate(Model, glm::vec3(0.75f, -0.75f, 0.0f)); // move top-left
+				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			
+			glBindVertexArray(0);
+		}
 
 		
 
@@ -755,7 +827,7 @@ int main()
 
 		// 将framebuffer设置为默认渲染buffer, 设置SissorTest为整个屏幕. 清一遍默认buffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT); 
+		//glScissor(0, 0, SCR_WIDTH, SCR_HEIGHT); 
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -763,11 +835,12 @@ int main()
 		{ // draw frame buffer
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glScissor(0, 0, SissorW, SissorH);
+			//glScissor(0, 0, SissorW, SissorH);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 			glDepthMask(GL_FALSE); // 关闭深度写入
 
-			ScreenShader.UseProgram();
+			// ScreenShader.UseProgram();
+			EmptyScreenShader.UseProgram();
 			glBindVertexArray(ScreenQuadVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);	// use the color attachment texture as the texture of the quad plane
@@ -784,11 +857,12 @@ int main()
 			//glScissor(0, 0, SissorW, SissorH);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
+			//glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 			glDepthMask(GL_FALSE); // 关闭深度写入
 
-			ScreenShader.UseProgram();
+			//ScreenShader.UseProgram();
+			EmptyScreenShader.UseProgram();
 			glBindVertexArray(ScreenQuadVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);	// use the color attachment texture as the texture of the quad plane
