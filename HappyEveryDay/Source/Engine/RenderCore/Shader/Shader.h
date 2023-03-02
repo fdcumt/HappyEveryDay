@@ -22,6 +22,7 @@ class FShader
 
 public:
 	FShader(const FStdString & InVertexShaderFileName, const FStdString & InFragmentShaderFileName);
+	FShader(const FStdString & InVertexShaderFileName, const FStdString& InGeometryShaderFileName, const FStdString & InFragmentShaderFileName);
 	~FShader();
 
 
@@ -58,4 +59,7 @@ protected:
 
 	FStdString FragmentShaderFileName;
 	FStdString FragmentShaderContent;
+
+	FStdString GeometryShaderFileName;
+	FStdString GeometryShaderContent;
 };

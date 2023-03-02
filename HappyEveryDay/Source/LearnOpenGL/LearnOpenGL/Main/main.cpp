@@ -320,6 +320,38 @@ int main()
 	FShader ShaderBlue(FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.advanced_glsl.vs", FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.blue.fs");
 	FShader ShaderYellow(FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.advanced_glsl.vs", FPaths::GetContentDir() + "/ShaderFiles/8.advanced_glsl_ubo/8.yellow.fs");
 
+	FShader ShaderGeometry(FPaths::GetContentDir() + "/ShaderFiles/9.1.geometry_shader_houses/9.1.geometry_shader.vs", 
+						FPaths::GetContentDir() + "/ShaderFiles/9.1.geometry_shader_houses/9.1.geometry_shader.gs",
+						FPaths::GetContentDir() + "/ShaderFiles/9.1.geometry_shader_houses/9.1.geometry_shader.fs");
+
+
+	float Points[] = 
+	{
+		-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+	};
+
+	uint32 PointVAO = 0;
+	{
+		uint32 PointsVBO;
+		glGenVertexArrays(1, &PointVAO);
+		glGenBuffers(1, &PointsVBO);
+
+		glBindVertexArray(PointVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, PointsVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Points), Points, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
+		glBindVertexArray(0);
+	}
+
 	float CubeVertices[] = {
 			// back face
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
@@ -678,6 +710,13 @@ int main()
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// 清除color buffer 和 depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+		{ // Draw points
+			ShaderGeometry.UseProgram();
+			glBindVertexArray(PointVAO);
+			glDrawArrays(GL_POINTS, 0, 4);
+			glBindVertexArray(0);
+		}
 
 		// 		// 把TextureID1和第0个texture绑定
 		// 		glActiveTexture(GL_TEXTURE0);

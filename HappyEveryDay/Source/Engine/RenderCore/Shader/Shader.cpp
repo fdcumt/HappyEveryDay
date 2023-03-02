@@ -55,6 +55,56 @@ FShader::FShader(const FStdString& InVertexShaderFileName, const FStdString& InF
 	bInitSucceed = VertexShaderOK && ProgramShaderOK && LinkShaderOK;
 }
 
+FShader::FShader(const FStdString& InVertexShaderFileName, const FStdString& InGeometryShaderFileName, const FStdString& InFragmentShaderFileName)
+	: VertexShaderFileName(InVertexShaderFileName)
+	, FragmentShaderFileName(InFragmentShaderFileName)
+	, GeometryShaderFileName(InGeometryShaderFileName)
+{
+	bool bLoadVertexShaderOK = LoadShaderFile(VertexShaderContent, VertexShaderFileName);
+	bool bLoadFragmentShaderOK = LoadShaderFile(FragmentShaderContent, FragmentShaderFileName);
+	bool bLoadGeometryShaderOK = LoadShaderFile(GeometryShaderContent, GeometryShaderFileName);
+
+	if (!bLoadVertexShaderOK || !bLoadFragmentShaderOK || !bLoadGeometryShaderOK)
+	{
+		return;
+	}
+
+	auto CompileShader = [this](uint32&OutShaderID, const int32 ShaderType, const char *pShaderData, const FStdString &ShaderFileName)
+	{
+		OutShaderID = glCreateShader(ShaderType);
+		glShaderSource(OutShaderID, 1, &pShaderData, nullptr);
+		glCompileShader(OutShaderID);
+		return this->CheckShaderCompileError(OutShaderID, EShaderStatusType::eCompile, ShaderFileName);
+	};
+
+	uint32 VertexShaderID = 0;
+	bool VertexShaderOK = CompileShader(VertexShaderID, GL_VERTEX_SHADER, VertexShaderContent.data(), VertexShaderFileName);
+
+	uint32 GeometryShaderID = 0;
+	bool GeometryShaderOK = CompileShader(GeometryShaderID, GL_GEOMETRY_SHADER, GeometryShaderContent.data(), GeometryShaderFileName);
+
+	uint32 FragmentShaderID = 0;
+	bool ProgramShaderOK = CompileShader(FragmentShaderID, GL_FRAGMENT_SHADER, FragmentShaderContent.data(), FragmentShaderFileName);
+
+	bool LinkShaderOK = false;
+	{ // link program
+		ProgramID = glCreateProgram();
+		glAttachShader(ProgramID, VertexShaderID);
+		glAttachShader(ProgramID, GeometryShaderID);
+		glAttachShader(ProgramID, FragmentShaderID);
+		glLinkProgram(ProgramID);
+
+		FStdString ErrorStr = FStdString("glLinkProgram LinkError---VertexShaderFileName:") + VertexShaderFileName + FStdString(", GeometryShaderFileName:") + GeometryShaderFileName +FStdString(",FragmentShaderFileName:") + FragmentShaderFileName;
+		LinkShaderOK = CheckShaderCompileError(ProgramID, EShaderStatusType::eLink, ErrorStr);
+	}
+
+	glDeleteShader(VertexShaderID);
+	glDeleteShader(GeometryShaderID);
+	glDeleteShader(FragmentShaderID);
+
+	bInitSucceed = VertexShaderOK && GeometryShaderOK && ProgramShaderOK && LinkShaderOK;
+}
+
 FShader::~FShader()
 {
 	
