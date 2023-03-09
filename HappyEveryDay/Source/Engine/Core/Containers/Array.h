@@ -1,5 +1,10 @@
 #pragma once
 #include <vector>
 
-template<typename T>
-using TArray = std::vector<T>;
+template <class T>
+class TArray
+{
+public:
+
+private:
+};

@@ -324,6 +324,12 @@ int main()
 						FPaths::GetContentDir() + "/ShaderFiles/9.1.geometry_shader_houses/9.1.geometry_shader.gs",
 						FPaths::GetContentDir() + "/ShaderFiles/9.1.geometry_shader_houses/9.1.geometry_shader.fs");
 
+	FShader ShaderGeometryExploding(
+		FPaths::GetContentDir()+"/ShaderFiles/9.2.geometry_shader_exploding/9.2.geometry_shader.vs", 
+		FPaths::GetContentDir()+"/ShaderFiles/9.2.geometry_shader_exploding/9.2.geometry_shader.gs", 
+		FPaths::GetContentDir()+"/ShaderFiles/9.2.geometry_shader_exploding/9.2.geometry_shader.fs");
+
+	FModel Nanosuit(FPaths::GetContentDir() + "Models/Nanosuit/nanosuit.obj");
 
 	float Points[] = 
 	{
@@ -536,8 +542,9 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	uint32 ScreenQuadVAO, ScreenQuadVBO;
+	uint32 ScreenQuadVAO;
 	{
+		uint32 ScreenQuadVBO;
 		glGenVertexArrays(1, &ScreenQuadVAO);
 		glGenBuffers(1, &ScreenQuadVBO);
 
@@ -711,32 +718,12 @@ int main()
 		// 清除color buffer 和 depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		{ // Draw points
-			ShaderGeometry.UseProgram();
-			glBindVertexArray(PointVAO);
-			glDrawArrays(GL_POINTS, 0, 4);
-			glBindVertexArray(0);
-		}
-
-		// 		// 把TextureID1和第0个texture绑定
-		// 		glActiveTexture(GL_TEXTURE0);
-		// 		glBindTexture(GL_TEXTURE_2D, TextureID1);
-		// 
-		// 		// 把TextureID1和第0个texture绑定
-		// 		glActiveTexture(GL_TEXTURE1);
-		// 		glBindTexture(GL_TEXTURE_2D, TextureID2);
-
-				// active shader
-				//Shader.UseProgram();
-
-				//float timeValue = glfwGetTime();
-				//float greenValue = sin(timeValue);
-				//
-				//int vertexColorLocation = glGetUniformLocation(ShaderProgram, "OurColor");
-				//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-
-				// 设置变换矩阵
-				//glm::mat4 ViewMatrix = glm::mat4(1.0f);
+// 		{ // Draw points
+// 			ShaderGeometry.UseProgram();
+// 			glBindVertexArray(PointVAO);
+// 			glDrawArrays(GL_POINTS, 0, 4);
+// 			glBindVertexArray(0);
+// 		}
 
 		Camera.RecalculateViewMatrix();
 
@@ -752,6 +739,16 @@ int main()
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
 
+		{ // draw mesh
+			ShaderGeometryExploding.UseProgram();
+			ShaderGeometryExploding.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+			ShaderGeometryExploding.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+			ShaderGeometryExploding.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+
+			ShaderGeometryExploding.SetFloat("Time", static_cast<float>(glfwGetTime()));
+			Nanosuit.Draw(ShaderGeometryExploding);
+		}
+
 		{ // update Uniform buffer data
 			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
 			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ProjectionMatrix));
@@ -759,7 +756,7 @@ int main()
 			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
 		}
 
-		{ // draw color cube
+		{ // 绘制三角形房子面片
 			glm::mat4 Model = glm::mat4(1.0f);
 			glBindVertexArray(CubeVAO);
 
@@ -870,7 +867,7 @@ int main()
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glViewport(0, 0, SCR_WIDTH/2, SCR_HEIGHT/2);
+		//glViewport(0, 0, SCR_WIDTH/2, SCR_HEIGHT/2);
 		{ // draw frame buffer
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -890,27 +887,27 @@ int main()
 			glDepthMask(GL_TRUE); 
 		}
 
-		glViewport(SCR_WIDTH / 2, SCR_HEIGHT / 2, SCR_WIDTH/2, SCR_HEIGHT / 2);
-		{ // draw frame buffer
-
-			//glScissor(0, 0, SissorW, SissorH);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			//glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
-			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-			glDepthMask(GL_FALSE); // 关闭深度写入
-
-			//ScreenShader.UseProgram();
-			EmptyScreenShader.UseProgram();
-			glBindVertexArray(ScreenQuadVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);	// use the color attachment texture as the texture of the quad plane
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			glBindVertexArray(0);
-			glEnable(GL_DEPTH_TEST);
-			glDepthMask(GL_TRUE);
-		}
+// 		glViewport(SCR_WIDTH / 2, SCR_HEIGHT / 2, SCR_WIDTH/2, SCR_HEIGHT / 2);
+// 		{ // draw frame buffer
+// 
+// 			//glScissor(0, 0, SissorW, SissorH);
+// 
+// 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+// 			//glScissor(SCR_WIDTH / 2, SCR_HEIGHT / 2, SissorW, SissorH);
+// 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+// 			glDepthMask(GL_FALSE); // 关闭深度写入
+// 
+// 			//ScreenShader.UseProgram();
+// 			EmptyScreenShader.UseProgram();
+// 			glBindVertexArray(ScreenQuadVAO);
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE_2D, TextureColorBufferObject);	// use the color attachment texture as the texture of the quad plane
+// 			glDrawArrays(GL_TRIANGLES, 0, 6);
+// 
+// 			glBindVertexArray(0);
+// 			glEnable(GL_DEPTH_TEST);
+// 			glDepthMask(GL_TRUE);
+// 		}
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
