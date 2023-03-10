@@ -329,7 +329,18 @@ int main()
 		FPaths::GetContentDir()+"/ShaderFiles/9.2.geometry_shader_exploding/9.2.geometry_shader.gs", 
 		FPaths::GetContentDir()+"/ShaderFiles/9.2.geometry_shader_exploding/9.2.geometry_shader.fs");
 
-	FModel Nanosuit(FPaths::GetContentDir() + "Models/Nanosuit/nanosuit.obj");
+	FShader ShaderGeometryDefault_9_3(FPaths::GetContentDir() + "/ShaderFiles/9.3.geometry_shader_normal/9.3.default.vs", FPaths::GetContentDir() + "/ShaderFiles/9.3.geometry_shader_normal/9.3.default.fs");
+	FShader ShaderGeometryNormal_9_3(
+		FPaths::GetContentDir() + "/ShaderFiles/9.3.geometry_shader_normal/9.3.geometry_shader_normal.vs",
+		FPaths::GetContentDir() + "/ShaderFiles/9.3.geometry_shader_normal/9.3.geometry_shader_normal.gs",
+		FPaths::GetContentDir() + "/ShaderFiles/9.3.geometry_shader_normal/9.3.geometry_shader_normal.fs");
+
+	FModel Nanosuit(FPaths::GetContentDir() + "/Models/Nanosuit/nanosuit.obj");
+
+	FSTBImage::SetFlipVerticallyOnLoad(true);
+	FModel Backpack(FPaths::GetContentDir() + "/Models/Backpack/backpack.obj");
+	FSTBImage::SetFlipVerticallyOnLoad(false);
+
 
 	float Points[] = 
 	{
@@ -739,56 +750,74 @@ int main()
 		glm::mat4 ViewMatrix = Camera.GetViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
 
-		{ // draw mesh
-			ShaderGeometryExploding.UseProgram();
-			ShaderGeometryExploding.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-			ShaderGeometryExploding.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
-			ShaderGeometryExploding.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+		{ // 9.3.geometry_shader_normal
+			{ // 绘制模型
+				ShaderGeometryDefault_9_3.UseProgram();
+				ShaderGeometryDefault_9_3.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+				ShaderGeometryDefault_9_3.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+				ShaderGeometryDefault_9_3.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+				Backpack.Draw(ShaderGeometryDefault_9_3);
+			}
 
-			ShaderGeometryExploding.SetFloat("Time", static_cast<float>(glfwGetTime()));
-			Nanosuit.Draw(ShaderGeometryExploding);
+			{ // 绘制法线
+				ShaderGeometryNormal_9_3.UseProgram();
+				ShaderGeometryNormal_9_3.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+				ShaderGeometryNormal_9_3.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+				ShaderGeometryNormal_9_3.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+				Backpack.Draw(ShaderGeometryNormal_9_3);
+			}
 		}
 
-		{ // update Uniform buffer data
-			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
-			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ProjectionMatrix));
-			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ViewMatrix));
-			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
-		}
+// 		{ // draw mesh
+// 			ShaderGeometryExploding.UseProgram();
+// 			ShaderGeometryExploding.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+// 			ShaderGeometryExploding.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+// 			ShaderGeometryExploding.SetMaterix4fv("Model", glm::value_ptr(ModelMatrix));
+// 
+// 			ShaderGeometryExploding.SetFloat("Time", static_cast<float>(glfwGetTime()));
+// 			Nanosuit.Draw(ShaderGeometryExploding);
+// 		}
 
-		{ // 绘制三角形房子面片
-			glm::mat4 Model = glm::mat4(1.0f);
-			glBindVertexArray(CubeVAO);
-
-			{
-				ShaderBlue.UseProgram();
-				glm::mat4 TempModel = glm::translate(Model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
-				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-			{
-				ShaderRed.UseProgram();
-				glm::mat4 TempModel = glm::translate(Model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-left
-				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-			{
-				ShaderYellow.UseProgram();
-				glm::mat4 TempModel = glm::translate(Model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move top-left
-				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-			{
-				ShaderGreen.UseProgram();
-				glm::mat4 TempModel = glm::translate(Model, glm::vec3(0.75f, -0.75f, 0.0f)); // move top-left
-				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-			
-			glBindVertexArray(0);
-		}
+// 		{ // update Uniform buffer data
+// 			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
+// 			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ProjectionMatrix));
+// 			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ViewMatrix));
+// 			glBindBuffer(GL_UNIFORM_BUFFER, UBOMatrices);
+// 		}
+// 
+// 		{ // 
+// 			glm::mat4 Model = glm::mat4(1.0f);
+// 			glBindVertexArray(CubeVAO);
+// 
+// 			{
+// 				ShaderBlue.UseProgram();
+// 				glm::mat4 TempModel = glm::translate(Model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+// 				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 			{
+// 				ShaderRed.UseProgram();
+// 				glm::mat4 TempModel = glm::translate(Model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-left
+// 				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 
+// 			{
+// 				ShaderYellow.UseProgram();
+// 				glm::mat4 TempModel = glm::translate(Model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move top-left
+// 				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 
+// 			{
+// 				ShaderGreen.UseProgram();
+// 				glm::mat4 TempModel = glm::translate(Model, glm::vec3(0.75f, -0.75f, 0.0f)); // move top-left
+// 				ShaderBlue.SetMaterix4fv("Model", glm::value_ptr(TempModel));
+// 				glDrawArrays(GL_TRIANGLES, 0, 36);
+// 			}
+// 			
+// 			glBindVertexArray(0);
+// 		}
 
 		
 
@@ -796,70 +825,70 @@ int main()
 		BlendingShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
 		BlendingShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
 
-		{ // floor
-			BlendingShader.UseProgram();
-			glBindVertexArray(PlaneVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, FloorTexture);
+// 		{ // floor
+// 			BlendingShader.UseProgram();
+// 			glBindVertexArray(PlaneVAO);
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE_2D, FloorTexture);
+// 
+// 			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+// 
+// 			glDrawArrays(GL_TRIANGLES, 0, 6);
+// 			glBindVertexArray(0);
+// 		}
 
-			glm::mat4 PlaneModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(PlaneModelMatrix));
+// 		{ // draw cube and write 1 to stencil buffer for cube
+// 			BlendingShader.UseProgram();
+// 			glBindVertexArray(CubeVAO);
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE_2D, CubeTexture);
+// 
+// 			glm::mat4 CubeModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
+// 			glDrawArrays(GL_TRIANGLES, 0, 36);
+// 
+// 			CubeModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
+// 			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
+// 			glDrawArrays(GL_TRIANGLES, 0, 36);
+// 
+// 			glBindVertexArray(0);
+// 		}
 
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			glBindVertexArray(0);
-		}
+// 		{ // draw sky box
+// 			glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+// 			SkyboxShader.UseProgram();
+// 			SkyboxShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
+// 			SkyboxShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
+// 
+// 			glBindVertexArray(SkyBoxVAO);
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMapTextureID);
+// 			glDrawArrays(GL_TRIANGLES, 0, 36);
+// 
+// 			glBindVertexArray(0);
+// 			glDepthFunc(GL_LESS); // set depth function back to default
+// 		}
 
-		{ // draw cube and write 1 to stencil buffer for cube
-			BlendingShader.UseProgram();
-			glBindVertexArray(CubeVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, CubeTexture);
-
-			glm::mat4 CubeModelMatrix = glm::translate(ModelMatrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			CubeModelMatrix = glm::translate(ModelMatrix, glm::vec3(2.0f, 0.0f, 0.0f));
-			BlendingShader.SetMaterix4fv("Model", glm::value_ptr(CubeModelMatrix));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			glBindVertexArray(0);
-		}
-
-		{ // draw sky box
-			glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-			SkyboxShader.UseProgram();
-			SkyboxShader.SetMaterix4fv("Projection", glm::value_ptr(ProjectionMatrix));
-			SkyboxShader.SetMaterix4fv("View", glm::value_ptr(ViewMatrix));
-
-			glBindVertexArray(SkyBoxVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMapTextureID);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			glBindVertexArray(0);
-			glDepthFunc(GL_LESS); // set depth function back to default
-		}
-
-		{ // draw transparent windows
-			glDepthMask(GL_FALSE); // 关闭深度写入
-			BlendingShader.UseProgram();
-			glBindVertexArray(TransparentVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, TransparentTexture);
-
-			for (std::map<float, glm::vec3>::reverse_iterator it = SortedWindowsLocation.rbegin(); it != SortedWindowsLocation.rend(); ++it)
-			{
-				glm::mat4 model = glm::mat4(1.0f);
-				model = glm::translate(model, it->second);
-				BlendingShader.SetMaterix4fv("Model", glm::value_ptr(model));
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-			}
-
-			glBindVertexArray(0);
-			glDepthMask(GL_TRUE); // 开启深度写入
-
-		}
+// 		{ // draw transparent windows
+// 			glDepthMask(GL_FALSE); // 关闭深度写入
+// 			BlendingShader.UseProgram();
+// 			glBindVertexArray(TransparentVAO);
+// 			glActiveTexture(GL_TEXTURE0);
+// 			glBindTexture(GL_TEXTURE_2D, TransparentTexture);
+// 
+// 			for (std::map<float, glm::vec3>::reverse_iterator it = SortedWindowsLocation.rbegin(); it != SortedWindowsLocation.rend(); ++it)
+// 			{
+// 				glm::mat4 model = glm::mat4(1.0f);
+// 				model = glm::translate(model, it->second);
+// 				BlendingShader.SetMaterix4fv("Model", glm::value_ptr(model));
+// 				glDrawArrays(GL_TRIANGLES, 0, 6);
+// 			}
+// 
+// 			glBindVertexArray(0);
+// 			glDepthMask(GL_TRUE); // 开启深度写入
+// 
+// 		}
 
 		// 将framebuffer设置为默认渲染buffer, 设置SissorTest为整个屏幕. 清一遍默认buffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

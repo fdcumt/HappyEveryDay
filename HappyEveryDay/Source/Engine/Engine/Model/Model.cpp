@@ -69,11 +69,11 @@ FMesh FModel::ProcessMesh(aiMesh* pAIMesh, const aiScene* pAIScene)
 
 			Vertex.Tangent.x = pAIMesh->mTangents[i].x;
 			Vertex.Tangent.y = pAIMesh->mTangents[i].y;
-			Vertex.Tangent.z = pAIMesh->mTangents[i].y;
+			Vertex.Tangent.z = pAIMesh->mTangents[i].z;
 
 			Vertex.Bitangent.x = pAIMesh->mBitangents[i].x;
 			Vertex.Bitangent.y = pAIMesh->mBitangents[i].y;
-			Vertex.Bitangent.z = pAIMesh->mBitangents[i].y;
+			Vertex.Bitangent.z = pAIMesh->mBitangents[i].z;
 		}
 		else
 		{
